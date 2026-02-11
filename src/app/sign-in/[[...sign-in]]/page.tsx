@@ -9,12 +9,12 @@ import { PWAInstallBanner } from "@/components/PWAInstallBanner";
 export default function SignInPage() {
     const { isLoaded: signInLoaded, signIn, setActive } = useSignIn();
     const { isLoaded: signUpLoaded, signUp } = useSignUp();
-    const { isSignedIn, isLoaded: authLoaded } = useAuth();
+    const { isSignedIn } = useAuth();
     const router = useRouter();
 
     useEffect(() => {
-        if (authLoaded && isSignedIn) router.replace("/");
-    }, [isSignedIn, authLoaded, router]);
+        if (isSignedIn) router.replace("/");
+    }, [isSignedIn, router]);
 
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
