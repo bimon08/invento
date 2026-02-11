@@ -22,11 +22,13 @@ export default function OrgSelectionPage() {
 
         try {
             await createOrganization({ name });
-            router.push("/");
+            // Hard redirect to ensure session picks up the new org
+            window.location.href = "/";
         } catch (err: unknown) {
+            console.error("Org creation failed:", err);
             const clerkError = err as { errors?: { message: string }[] };
             setError(
-                clerkError.errors?.[0]?.message || "Failed to create store"
+                clerkError.errors?.[0]?.message || "Failed to create store. Please try again."
             );
         } finally {
             setIsLoading(false);
