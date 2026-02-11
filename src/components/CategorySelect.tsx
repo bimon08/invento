@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { ChevronDown, Plus, Tag } from "lucide-react";
+import { ChevronDown, Plus, Tag, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const DEFAULT_CATEGORIES = [
@@ -29,10 +29,8 @@ export function CategorySelect({
 }: CategorySelectProps) {
     const [isOpen, setIsOpen] = useState(false);
     const [search, setSearch] = useState("");
-    const containerRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
 
-    // Merge defaults with existing categories (deduplicated)
     const allCategories = Array.from(
         new Set([...existingCategories, ...DEFAULT_CATEGORIES])
     ).sort();
@@ -49,19 +47,10 @@ export function CategorySelect({
             (c) => c.toLowerCase() === search.trim().toLowerCase()
         );
 
-    // Close on outside click
     useEffect(() => {
-        const handleClick = (e: MouseEvent) => {
-            if (
-                containerRef.current &&
-                !containerRef.current.contains(e.target as Node)
-            ) {
-                setIsOpen(false);
-                setSearch("");
-            }
-        };
-        if (isOpen) document.addEventListener("mousedown", handleClick);
-        return () => document.removeEventListener("mousedown", handleClick);
+        if (isOpen) {
+            setTimeout(() => inputRef.current?.focus(), 50);
+        }
     }, [isOpen]);
 
     const handleSelect = (cat: string) => {
@@ -78,39 +67,52 @@ export function CategorySelect({
         }
     };
 
+    const handleClear = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        onChange("");
+    };
+
     return (
-        <div ref={containerRef} className="relative">
-            {/* Trigger / Input */}
+        <div className="relative">
+            {/* Trigger */}
             <button
                 type="button"
                 onClick={() => {
                     setIsOpen(!isOpen);
-                    if (!isOpen) {
-                        setTimeout(() => inputRef.current?.focus(), 50);
-                    }
+                    setSearch("");
                 }}
                 className={cn(
-                    "flex h-12 w-full items-center justify-between rounded-xl border bg-slate-800 px-4 text-sm text-left transition-all",
+                    "flex h-11 w-full items-center justify-between rounded-xl border bg-slate-800 px-3 text-sm text-left transition-all",
                     isOpen
                         ? "border-indigo-500 ring-2 ring-indigo-500/20"
                         : "border-slate-700 hover:border-slate-600"
                 )}
             >
-                <span className={value ? "text-white" : "text-slate-500"}>
+                <span className={cn("truncate", value ? "text-white" : "text-slate-500")}>
                     {value || "Select category..."}
                 </span>
-                <ChevronDown
-                    className={cn(
-                        "h-4 w-4 text-slate-500 transition-transform",
-                        isOpen && "rotate-180"
+                <div className="flex items-center gap-1 shrink-0">
+                    {value && (
+                        <span
+                            onClick={handleClear}
+                            className="rounded p-0.5 text-slate-500 hover:text-white"
+                        >
+                            <X className="h-3 w-3" />
+                        </span>
                     )}
-                />
+                    <ChevronDown
+                        className={cn(
+                            "h-3.5 w-3.5 text-slate-500 transition-transform",
+                            isOpen && "rotate-180"
+                        )}
+                    />
+                </div>
             </button>
 
-            {/* Dropdown */}
+            {/* Inline dropdown — expands within flow */}
             {isOpen && (
-                <div className="absolute left-0 right-0 top-full z-20 mt-1.5 overflow-hidden rounded-xl border border-slate-700/50 bg-slate-900 shadow-xl shadow-black/30">
-                    {/* Search Input */}
+                <div className="mt-1.5 overflow-hidden rounded-xl border border-slate-700/50 bg-slate-900 shadow-xl shadow-black/30">
+                    {/* Search */}
                     <div className="border-b border-slate-800 p-2">
                         <input
                             ref={inputRef}
@@ -132,9 +134,8 @@ export function CategorySelect({
                         />
                     </div>
 
-                    {/* Options List */}
-                    <div className="max-h-48 overflow-y-auto py-1">
-                        {/* Create new option */}
+                    {/* Options */}
+                    <div className="max-h-40 overflow-y-auto py-1">
                         {showCreateOption && (
                             <button
                                 type="button"

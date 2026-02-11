@@ -138,26 +138,26 @@ export function AddProductDrawer({ open, onOpenChange }: AddProductDrawerProps) 
                                 />
                             </div>
 
-                            {/* Brand & Category Row */}
-                            <div className="grid grid-cols-2 gap-3">
-                                <div>
-                                    <label className="mb-1.5 block text-xs font-medium text-slate-400">
-                                        Brand
-                                    </label>
-                                    <BrandSelect
-                                        value={brand}
-                                        onChange={setBrand}
-                                    />
-                                </div>
-                                <div>
-                                    <label className="mb-1.5 block text-xs font-medium text-slate-400">
-                                        Category
-                                    </label>
-                                    <CategorySelect
-                                        value={category}
-                                        onChange={setCategory}
-                                    />
-                                </div>
+                            {/* Brand */}
+                            <div>
+                                <label className="mb-1.5 block text-xs font-medium text-slate-400">
+                                    Brand
+                                </label>
+                                <BrandSelect
+                                    value={brand}
+                                    onChange={setBrand}
+                                />
+                            </div>
+
+                            {/* Category */}
+                            <div>
+                                <label className="mb-1.5 block text-xs font-medium text-slate-400">
+                                    Category
+                                </label>
+                                <CategorySelect
+                                    value={category}
+                                    onChange={setCategory}
+                                />
                             </div>
 
                             {/* Model */}
