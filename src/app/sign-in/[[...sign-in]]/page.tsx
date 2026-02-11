@@ -23,6 +23,15 @@ export default function SignInPage() {
     const [isLoading, setIsLoading] = useState(false);
     const [showSignUpPrompt, setShowSignUpPrompt] = useState(false);
 
+    // If already signed in, show loading
+    if (isSignedIn) {
+        return (
+            <div className="flex min-h-[100dvh] items-center justify-center bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950">
+                <Loader2 className="h-8 w-8 animate-spin text-indigo-400" />
+            </div>
+        );
+    }
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!signInLoaded || !signIn) return;
@@ -45,7 +54,11 @@ export default function SignInPage() {
             const clerkError = err as { errors?: { code: string; message: string }[] };
             const firstError = clerkError.errors?.[0];
 
-            if (firstError?.code === "form_identifier_not_found") {
+            if (firstError?.code === "session_exists") {
+                // Already signed in — just redirect
+                router.replace("/");
+                return;
+            } else if (firstError?.code === "form_identifier_not_found") {
                 setShowSignUpPrompt(true);
                 setError("Account not found. Would you like to create one?");
             } else {
