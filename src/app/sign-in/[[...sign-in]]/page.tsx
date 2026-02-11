@@ -55,8 +55,8 @@ export default function SignInPage() {
             const firstError = clerkError.errors?.[0];
 
             if (firstError?.code === "session_exists") {
-                // Already signed in — just redirect
-                router.replace("/");
+                // Already signed in — hard redirect to bypass any caching
+                window.location.href = "/";
                 return;
             } else if (firstError?.code === "form_identifier_not_found") {
                 setShowSignUpPrompt(true);
