@@ -146,7 +146,7 @@ export default function SignInPage() {
                                 <button
                                     type="submit"
                                     disabled={isJoiningStaff || staffCode.length < 4}
-                                    className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-lg shadow-indigo-500/20 transition-all active:scale-95 disabled:opacity-50"
+                                    className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-lg shadow-indigo-500/20 transition-all active:scale-95 disabled:opacity-50"
                                 >
                                     {isJoiningStaff ? (
                                         <Loader2 className="h-4 w-4 animate-spin" />

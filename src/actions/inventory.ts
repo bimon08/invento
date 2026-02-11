@@ -50,6 +50,8 @@ export const createProduct = createServerAction()
     .input(
         z.object({
             name: z.string().min(1, "Product name is required"),
+            brand: z.string().optional(),
+            model: z.string().optional(),
             category: z.string().optional(),
             price: z.number().min(0, "Price must be positive"),
             stock: z.number().int().min(0, "Stock must be non-negative"),
@@ -64,6 +66,8 @@ export const createProduct = createServerAction()
             .values({
                 orgId,
                 name: input.name,
+                brand: input.brand || "",
+                model: input.model || "",
                 category: input.category || "",
                 price: input.price,
                 stock: input.stock,
@@ -81,6 +85,8 @@ export const updateProduct = createServerAction()
         z.object({
             id: z.string(),
             name: z.string().min(1, "Product name is required").optional(),
+            brand: z.string().optional(),
+            model: z.string().optional(),
             category: z.string().optional(),
             price: z.number().min(0).optional(),
             stock: z.number().int().min(0).optional(),

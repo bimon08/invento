@@ -9,6 +9,8 @@ export const products = sqliteTable(
             .$defaultFn(() => crypto.randomUUID()),
         orgId: text("org_id").notNull(),
         name: text("name").notNull(),
+        brand: text("brand").default(""),
+        model: text("model").default(""),
         category: text("category").default(""),
         price: real("price").notNull(),
         stock: integer("stock").notNull().default(0),
