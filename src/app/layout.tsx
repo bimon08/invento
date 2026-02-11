@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import { ClerkProvider } from "@clerk/nextjs";
 import { dark } from "@clerk/themes";
 import { Toaster } from "sonner";
+import { ServiceWorkerRegister } from "@/components/ServiceWorkerRegister";
 import "./globals.css";
 
 const inter = Inter({
@@ -39,6 +40,7 @@ export default function RootLayout({
   const body = (
     <html lang="en" className="dark">
       <body className={`${inter.variable} font-sans antialiased`}>
+        <ServiceWorkerRegister />
         {children}
         <Toaster
           theme="dark"
