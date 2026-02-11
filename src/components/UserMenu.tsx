@@ -134,13 +134,21 @@ export function UserMenu({ totalValue }: UserMenuProps) {
 
     const handleCreate = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!createOrganization || !newName.trim()) return;
+        if (!createOrganization || !setActive || !newName.trim()) return;
 
         setIsCreating(true);
         try {
-            await createOrganization({ name: newName.trim() });
+            const org = await createOrganization({ name: newName.trim() });
+            // Switch to the newly created org
+            await setActive({ organization: org.id });
+            // Refresh the memberships list
+            await userMemberships?.revalidate?.();
             setNewName("");
             setShowCreate(false);
+            toast.success("Store created", {
+                description: `${org.name} is now your active store.`,
+            });
+            router.refresh();
         } catch {
             toast.error("Failed to create store");
         } finally {
