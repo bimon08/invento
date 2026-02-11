@@ -1,18 +1,28 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useOrganization } from "@clerk/nextjs";
 import {
     UserPlus,
     Loader2,
     Trash2,
-    Mail,
     Shield,
     Users,
     Clock,
     X,
+    Link2,
+    Copy,
+    Check,
+    RefreshCw,
 } from "lucide-react";
 import { toast } from "sonner";
+
+interface JoinCodeData {
+    id: string;
+    code: string;
+    role: string;
+    orgName: string;
+}
 
 export function StaffManager() {
     const {
@@ -25,35 +35,63 @@ export function StaffManager() {
         invitations: { infinite: true },
     });
 
-    const [email, setEmail] = useState("");
-    const [role, setRole] = useState<"org:admin" | "org:member">("org:member");
-    const [isInviting, setIsInviting] = useState(false);
     const [removingId, setRemovingId] = useState<string | null>(null);
     const [revokingId, setRevokingId] = useState<string | null>(null);
+    const [joinCode, setJoinCode] = useState<JoinCodeData | null>(null);
+    const [isGenerating, setIsGenerating] = useState(false);
+    const [copied, setCopied] = useState(false);
+    const [loadingCode, setLoadingCode] = useState(true);
 
     if (!isLoaded || !organization) return null;
 
-    const handleInvite = async (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!email.trim()) return;
-
-        setIsInviting(true);
-        try {
-            await organization.inviteMember({
-                emailAddress: email.trim(),
-                role,
-            });
-            setEmail("");
-            toast.success(`Invite sent to ${email}`);
-            invitations?.revalidate?.();
-        } catch (err: unknown) {
-            const clerkError = err as { errors?: { message: string }[] };
-            toast.error(
-                clerkError.errors?.[0]?.message || "Failed to send invite"
-            );
-        } finally {
-            setIsInviting(false);
+    // Fetch existing join code
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    useEffect(() => {
+        async function fetchCode() {
+            try {
+                const res = await fetch("/api/join-codes");
+                const data = await res.json();
+                if (data.codes?.length > 0) {
+                    setJoinCode(data.codes[0]);
+                }
+            } catch {
+                // Ignore — no existing code
+            } finally {
+                setLoadingCode(false);
+            }
         }
+        fetchCode();
+    }, []);
+
+    const generateInviteLink = async () => {
+        setIsGenerating(true);
+        try {
+            const res = await fetch("/api/join-codes", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ role: "org:member" }),
+            });
+            const data = await res.json();
+            if (res.ok) {
+                setJoinCode(data.code);
+                toast.success("Invite link generated!");
+            } else {
+                toast.error(data.error || "Failed to generate link");
+            }
+        } catch {
+            toast.error("Failed to generate invite link");
+        } finally {
+            setIsGenerating(false);
+        }
+    };
+
+    const copyLink = async () => {
+        if (!joinCode) return;
+        const link = `${window.location.origin}/join/${joinCode.code}`;
+        await navigator.clipboard.writeText(link);
+        setCopied(true);
+        toast.success("Invite link copied!");
+        setTimeout(() => setCopied(false), 2000);
     };
 
     const handleRemoveMember = async (membershipId: string, name: string) => {
@@ -100,47 +138,64 @@ export function StaffManager() {
                 </div>
             </div>
 
-            {/* Invite Form */}
+            {/* Invite Link Section */}
             <div className="mb-6 rounded-2xl border border-slate-700/50 bg-slate-900/80 p-4 shadow-lg shadow-black/10">
                 <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold text-white">
-                    <UserPlus className="h-4 w-4 text-indigo-400" />
-                    Invite Staff
+                    <Link2 className="h-4 w-4 text-indigo-400" />
+                    Invite Link
                 </h3>
-                <form onSubmit={handleInvite} className="flex flex-col gap-3">
-                    <input
-                        type="email"
-                        required
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        placeholder="staff@example.com"
-                        className="h-11 w-full rounded-xl border border-slate-700 bg-slate-800 px-4 text-sm text-white placeholder:text-slate-500 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all"
-                    />
+                <p className="mb-3 text-xs text-slate-400">
+                    Share this link with staff to let them join your store. No email required.
+                </p>
 
-                    <div className="flex gap-2">
-                        <select
-                            value={role}
-                            onChange={(e) =>
-                                setRole(e.target.value as "org:admin" | "org:member")
-                            }
-                            className="h-11 flex-1 rounded-xl border border-slate-700 bg-slate-800 px-3 text-sm text-white outline-none focus:border-indigo-500 transition-all"
-                        >
-                            <option value="org:member">Member</option>
-                            <option value="org:admin">Admin</option>
-                        </select>
+                {loadingCode ? (
+                    <div className="flex h-11 items-center justify-center">
+                        <Loader2 className="h-4 w-4 animate-spin text-slate-500" />
+                    </div>
+                ) : joinCode ? (
+                    <div className="flex flex-col gap-2">
+                        <div className="flex items-center gap-2">
+                            <div className="flex h-11 flex-1 items-center rounded-xl border border-slate-700 bg-slate-800 px-4">
+                                <code className="text-sm font-mono text-indigo-300 truncate">
+                                    {typeof window !== "undefined"
+                                        ? `${window.location.origin}/join/${joinCode.code}`
+                                        : `/join/${joinCode.code}`}
+                                </code>
+                            </div>
+                            <button
+                                onClick={copyLink}
+                                className="flex h-11 w-11 items-center justify-center rounded-xl border border-slate-700 bg-slate-800 text-slate-400 transition-all hover:border-indigo-500/50 hover:text-indigo-400 active:scale-95"
+                            >
+                                {copied ? (
+                                    <Check className="h-4 w-4 text-emerald-400" />
+                                ) : (
+                                    <Copy className="h-4 w-4" />
+                                )}
+                            </button>
+                        </div>
                         <button
-                            type="submit"
-                            disabled={isInviting || !email.trim()}
-                            className="flex h-11 items-center gap-2 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600 px-5 text-sm font-semibold text-white shadow-lg shadow-indigo-500/20 transition-all active:scale-[0.98] hover:shadow-indigo-500/35 disabled:opacity-50 disabled:cursor-not-allowed"
+                            onClick={generateInviteLink}
+                            disabled={isGenerating}
+                            className="flex h-9 items-center justify-center gap-1.5 rounded-lg text-xs font-medium text-slate-500 transition-colors hover:text-slate-300"
                         >
-                            {isInviting ? (
-                                <Loader2 className="h-4 w-4 animate-spin" />
-                            ) : (
-                                <Mail className="h-4 w-4" />
-                            )}
-                            Invite
+                            <RefreshCw className={`h-3 w-3 ${isGenerating ? "animate-spin" : ""}`} />
+                            Generate new link
                         </button>
                     </div>
-                </form>
+                ) : (
+                    <button
+                        onClick={generateInviteLink}
+                        disabled={isGenerating}
+                        className="flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600 text-sm font-semibold text-white shadow-lg shadow-indigo-500/20 transition-all active:scale-[0.98] hover:shadow-indigo-500/35 disabled:opacity-50"
+                    >
+                        {isGenerating ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                            <Link2 className="h-4 w-4" />
+                        )}
+                        Generate Invite Link
+                    </button>
+                )}
             </div>
 
             {/* Current Members */}
@@ -175,13 +230,12 @@ export function StaffManager() {
                             </div>
                             <span
                                 className={`rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider ${mem.role === "org:admin"
-                                        ? "bg-amber-500/10 text-amber-400 border border-amber-500/20"
-                                        : "bg-slate-700/50 text-slate-400 border border-slate-600/30"
+                                    ? "bg-amber-500/10 text-amber-400 border border-amber-500/20"
+                                    : "bg-slate-700/50 text-slate-400 border border-slate-600/30"
                                     }`}
                             >
                                 {mem.role === "org:admin" ? "Admin" : "Member"}
                             </span>
-                            {/* Don't allow removing yourself (the current user with creator role) */}
                             {mem.role !== "org:admin" && (
                                 <button
                                     onClick={() =>
@@ -223,7 +277,7 @@ export function StaffManager() {
                                 className="flex items-center gap-3 px-4 py-3"
                             >
                                 <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-slate-800 border border-slate-700">
-                                    <Mail className="h-4 w-4 text-slate-500" />
+                                    <UserPlus className="h-4 w-4 text-slate-500" />
                                 </div>
                                 <div className="flex-1 min-w-0">
                                     <p className="truncate text-sm text-white">
