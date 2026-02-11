@@ -78,3 +78,45 @@ export const staffMembers = sqliteTable(
 
 export type StaffMember = typeof staffMembers.$inferSelect;
 export type NewStaffMember = typeof staffMembers.$inferInsert;
+
+// ── Categories (per-store, saved for reuse) ─────────────────────────────────
+export const categories = sqliteTable(
+    "categories",
+    {
+        id: text("id")
+            .primaryKey()
+            .$defaultFn(() => crypto.randomUUID()),
+        orgId: text("org_id").notNull(),
+        name: text("name").notNull(),
+        createdAt: text("created_at")
+            .notNull()
+            .default(sql`(datetime('now'))`),
+    },
+    (table) => [
+        index("cat_org_idx").on(table.orgId),
+        index("cat_org_name_idx").on(table.orgId, table.name),
+    ]
+);
+
+export type Category = typeof categories.$inferSelect;
+
+// ── Brands (per-store, saved for reuse) ─────────────────────────────────────
+export const brands = sqliteTable(
+    "brands",
+    {
+        id: text("id")
+            .primaryKey()
+            .$defaultFn(() => crypto.randomUUID()),
+        orgId: text("org_id").notNull(),
+        name: text("name").notNull(),
+        createdAt: text("created_at")
+            .notNull()
+            .default(sql`(datetime('now'))`),
+    },
+    (table) => [
+        index("brand_org_idx").on(table.orgId),
+        index("brand_org_name_idx").on(table.orgId, table.name),
+    ]
+);
+
+export type Brand = typeof brands.$inferSelect;

@@ -3,7 +3,7 @@
 import { createServerAction } from "zsa";
 import { z } from "zod";
 import { db } from "@/db";
-import { products } from "@/db/schema";
+import { products, categories, brands } from "@/db/schema";
 import { getAppSession } from "@/lib/auth";
 import { eq, and, like, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
@@ -146,4 +146,82 @@ export const adjustStock = createServerAction()
 
         revalidatePath("/");
         return product;
+    });
+
+// ── Get Categories ──────────────────────────────────────────────────────────────
+export const getCategories = createServerAction()
+    .handler(async () => {
+        const orgId = await getOrgId();
+        const rows = await db
+            .select()
+            .from(categories)
+            .where(eq(categories.orgId, orgId))
+            .orderBy(categories.name);
+        return rows.map((r) => r.name);
+    });
+
+// ── Create Category ─────────────────────────────────────────────────────────────
+export const createCategory = createServerAction()
+    .input(
+        z.object({
+            name: z.string().min(1, "Category name is required"),
+        })
+    )
+    .handler(async ({ input }) => {
+        const orgId = await getOrgId();
+
+        // Check if already exists
+        const [existing] = await db
+            .select()
+            .from(categories)
+            .where(and(eq(categories.orgId, orgId), eq(categories.name, input.name)))
+            .limit(1);
+
+        if (existing) return existing;
+
+        const [cat] = await db
+            .insert(categories)
+            .values({ orgId, name: input.name })
+            .returning();
+
+        return cat;
+    });
+
+// ── Get Brands ──────────────────────────────────────────────────────────────────
+export const getBrands = createServerAction()
+    .handler(async () => {
+        const orgId = await getOrgId();
+        const rows = await db
+            .select()
+            .from(brands)
+            .where(eq(brands.orgId, orgId))
+            .orderBy(brands.name);
+        return rows.map((r) => r.name);
+    });
+
+// ── Create Brand ────────────────────────────────────────────────────────────────
+export const createBrand = createServerAction()
+    .input(
+        z.object({
+            name: z.string().min(1, "Brand name is required"),
+        })
+    )
+    .handler(async ({ input }) => {
+        const orgId = await getOrgId();
+
+        // Check if already exists
+        const [existing] = await db
+            .select()
+            .from(brands)
+            .where(and(eq(brands.orgId, orgId), eq(brands.name, input.name)))
+            .limit(1);
+
+        if (existing) return existing;
+
+        const [brand] = await db
+            .insert(brands)
+            .values({ orgId, name: input.name })
+            .returning();
+
+        return brand;
     });

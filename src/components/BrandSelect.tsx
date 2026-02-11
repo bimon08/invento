@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { ChevronDown, Plus, Smartphone, X } from "lucide-react";
+import { ChevronDown, Plus, Smartphone, X, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { getBrands, createBrand } from "@/actions/inventory";
 
 const DEFAULT_BRANDS = [
     "Apple",
@@ -41,10 +42,21 @@ export function BrandSelect({
 }: BrandSelectProps) {
     const [isOpen, setIsOpen] = useState(false);
     const [search, setSearch] = useState("");
+    const [savedBrands, setSavedBrands] = useState<string[]>([]);
+    const [isCreating, setIsCreating] = useState(false);
     const inputRef = useRef<HTMLInputElement>(null);
 
+    // Load saved brands from DB on first open
+    useEffect(() => {
+        if (isOpen && savedBrands.length === 0) {
+            getBrands().then(([data]) => {
+                if (data) setSavedBrands(data);
+            });
+        }
+    }, [isOpen, savedBrands.length]);
+
     const allBrands = Array.from(
-        new Set([...existingBrands, ...DEFAULT_BRANDS])
+        new Set([...savedBrands, ...existingBrands, ...DEFAULT_BRANDS])
     ).sort();
 
     const filtered = search
@@ -71,11 +83,23 @@ export function BrandSelect({
         setSearch("");
     };
 
-    const handleCreate = () => {
-        if (search.trim()) {
-            onChange(search.trim());
+    const handleCreate = async () => {
+        const name = search.trim();
+        if (!name) return;
+
+        setIsCreating(true);
+        try {
+            await createBrand({ name });
+            setSavedBrands((prev) => Array.from(new Set([...prev, name])).sort());
+            onChange(name);
             setIsOpen(false);
             setSearch("");
+        } catch {
+            onChange(name);
+            setIsOpen(false);
+            setSearch("");
+        } finally {
+            setIsCreating(false);
         }
     };
 
@@ -152,9 +176,14 @@ export function BrandSelect({
                             <button
                                 type="button"
                                 onClick={handleCreate}
-                                className="flex w-full items-center gap-2.5 px-3.5 py-2.5 text-sm text-indigo-400 transition-colors hover:bg-indigo-500/10"
+                                disabled={isCreating}
+                                className="flex w-full items-center gap-2.5 px-3.5 py-2.5 text-sm text-indigo-400 transition-colors hover:bg-indigo-500/10 disabled:opacity-50"
                             >
-                                <Plus className="h-3.5 w-3.5" />
+                                {isCreating ? (
+                                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                ) : (
+                                    <Plus className="h-3.5 w-3.5" />
+                                )}
                                 Create &ldquo;{search.trim()}&rdquo;
                             </button>
                         )}

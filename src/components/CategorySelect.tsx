@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { ChevronDown, Plus, Tag, X } from "lucide-react";
+import { ChevronDown, Plus, Tag, X, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { getCategories, createCategory } from "@/actions/inventory";
 
 const DEFAULT_CATEGORIES = [
     "Screens",
@@ -29,10 +30,21 @@ export function CategorySelect({
 }: CategorySelectProps) {
     const [isOpen, setIsOpen] = useState(false);
     const [search, setSearch] = useState("");
+    const [savedCategories, setSavedCategories] = useState<string[]>([]);
+    const [isCreating, setIsCreating] = useState(false);
     const inputRef = useRef<HTMLInputElement>(null);
 
+    // Load saved categories from DB on first open
+    useEffect(() => {
+        if (isOpen && savedCategories.length === 0) {
+            getCategories().then(([data]) => {
+                if (data) setSavedCategories(data);
+            });
+        }
+    }, [isOpen, savedCategories.length]);
+
     const allCategories = Array.from(
-        new Set([...existingCategories, ...DEFAULT_CATEGORIES])
+        new Set([...savedCategories, ...existingCategories, ...DEFAULT_CATEGORIES])
     ).sort();
 
     const filtered = search
@@ -59,11 +71,24 @@ export function CategorySelect({
         setSearch("");
     };
 
-    const handleCreate = () => {
-        if (search.trim()) {
-            onChange(search.trim());
+    const handleCreate = async () => {
+        const name = search.trim();
+        if (!name) return;
+
+        setIsCreating(true);
+        try {
+            await createCategory({ name });
+            setSavedCategories((prev) => Array.from(new Set([...prev, name])).sort());
+            onChange(name);
             setIsOpen(false);
             setSearch("");
+        } catch {
+            // Fallback: still set the value even if DB save fails
+            onChange(name);
+            setIsOpen(false);
+            setSearch("");
+        } finally {
+            setIsCreating(false);
         }
     };
 
@@ -140,9 +165,14 @@ export function CategorySelect({
                             <button
                                 type="button"
                                 onClick={handleCreate}
-                                className="flex w-full items-center gap-2.5 px-3.5 py-2.5 text-sm text-indigo-400 transition-colors hover:bg-indigo-500/10"
+                                disabled={isCreating}
+                                className="flex w-full items-center gap-2.5 px-3.5 py-2.5 text-sm text-indigo-400 transition-colors hover:bg-indigo-500/10 disabled:opacity-50"
                             >
-                                <Plus className="h-3.5 w-3.5" />
+                                {isCreating ? (
+                                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                ) : (
+                                    <Plus className="h-3.5 w-3.5" />
+                                )}
                                 Create &ldquo;{search.trim()}&rdquo;
                             </button>
                         )}
