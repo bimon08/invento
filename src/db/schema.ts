@@ -56,3 +56,25 @@ export const joinCodes = sqliteTable(
 
 export type JoinCode = typeof joinCodes.$inferSelect;
 export type NewJoinCode = typeof joinCodes.$inferInsert;
+
+// ── Staff Members (simple code + username auth) ─────────────────────────────
+export const staffMembers = sqliteTable(
+    "staff_members",
+    {
+        id: text("id")
+            .primaryKey()
+            .$defaultFn(() => crypto.randomUUID()),
+        orgId: text("org_id").notNull(),
+        username: text("username").notNull(),
+        createdAt: text("created_at")
+            .notNull()
+            .default(sql`(datetime('now'))`),
+    },
+    (table) => [
+        index("staff_org_idx").on(table.orgId),
+        index("staff_org_user_idx").on(table.orgId, table.username),
+    ]
+);
+
+export type StaffMember = typeof staffMembers.$inferSelect;
+export type NewStaffMember = typeof staffMembers.$inferInsert;

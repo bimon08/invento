@@ -1,6 +1,6 @@
 export const dynamic = "force-dynamic";
 
-import { auth } from "@clerk/nextjs/server";
+import { getAppSession } from "@/lib/auth";
 import { db } from "@/db";
 import { products } from "@/db/schema";
 import { eq, like, and } from "drizzle-orm";
@@ -17,7 +17,8 @@ interface PageProps {
 }
 
 export default async function DashboardPage({ searchParams }: PageProps) {
-  const { orgId } = await auth();
+  const session = await getAppSession();
+  const orgId = session?.orgId;
   const params = await searchParams;
 
   // No org selected — show welcome

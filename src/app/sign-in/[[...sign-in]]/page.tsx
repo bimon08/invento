@@ -11,16 +11,15 @@ export default function SignInPage() {
     const { isSignedIn } = useAuth();
     const router = useRouter();
 
-    const [staffCode, setStaffCode] = useState("");
-    const [isJoiningStaff, setIsJoiningStaff] = useState(false);
     const [showStaffInput, setShowStaffInput] = useState(false);
+    const [code, setCode] = useState("");
     const [error, setError] = useState("");
+    const [isLoading, setIsLoading] = useState(false);
 
     useEffect(() => {
         if (isSignedIn) router.replace("/");
     }, [isSignedIn, router]);
 
-    // If already signed in, show loading
     if (isSignedIn) {
         return (
             <div className="flex min-h-[100dvh] items-center justify-center bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950">
@@ -38,37 +37,34 @@ export default function SignInPage() {
         });
     };
 
-    const handleStaffCodeSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!staffCode.trim()) return;
+    const handleCodeChange = (val: string) => {
+        setCode(val.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 6));
+        setError("");
+    };
 
-        setIsJoiningStaff(true);
+    const handleCodeSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (code.length < 6) return;
+
+        setIsLoading(true);
         setError("");
 
         try {
-            // First validate the code
-            const res = await fetch(`/api/join-codes/validate?code=${staffCode.trim()}`);
+            // Validate code first
+            const res = await fetch(`/api/staff?code=${code}`);
             const data = await res.json();
 
             if (!res.ok) {
-                setError(data.error || "Invalid staff code");
-                setIsJoiningStaff(false);
+                setError(data.error || "Invalid code");
                 return;
             }
 
-            // Code is valid — store it and redirect to Google sign-in
-            // After sign-in, the user will be redirected to /join/[code]
-            sessionStorage.setItem("pending_join_code", staffCode.trim().toUpperCase());
-
-            if (!signInLoaded || !signIn) return;
-            signIn.authenticateWithRedirect({
-                strategy: "oauth_google",
-                redirectUrl: "/sign-in/sso-callback",
-                redirectUrlComplete: `/join/${staffCode.trim().toUpperCase()}`,
-            });
+            // Code valid — redirect to staff login page
+            router.push(`/staff-login/${code}`);
         } catch {
-            setError("Failed to validate code. Please try again.");
-            setIsJoiningStaff(false);
+            setError("Failed to connect. Please try again.");
+        } finally {
+            setIsLoading(false);
         }
     };
 
@@ -88,7 +84,7 @@ export default function SignInPage() {
 
                 {/* Main Card */}
                 <div className="rounded-3xl border border-slate-700/50 bg-slate-900/80 p-6 shadow-2xl shadow-black/40 backdrop-blur-xl">
-                    {/* Google Sign In — for store owners */}
+                    {/* Google Sign In */}
                     <button
                         type="button"
                         onClick={handleGoogleSignIn}
@@ -110,7 +106,7 @@ export default function SignInPage() {
                         <div className="h-px flex-1 bg-slate-800" />
                     </div>
 
-                    {/* Staff Code Section */}
+                    {/* Staff: Enter Code */}
                     {!showStaffInput ? (
                         <button
                             type="button"
@@ -121,34 +117,34 @@ export default function SignInPage() {
                             Join as Staff
                         </button>
                     ) : (
-                        <form onSubmit={handleStaffCodeSubmit} className="flex flex-col gap-3">
+                        <form onSubmit={handleCodeSubmit} className="flex flex-col gap-3">
                             <p className="text-xs text-slate-400 text-center">
-                                Enter the code your admin shared with you
+                                Enter the code your admin shared
                             </p>
 
                             {error && (
-                                <div className="rounded-xl border border-red-500/30 bg-red-500/5 px-4 py-2.5 text-sm text-red-400">
-                                    {error}
-                                </div>
+                                <p className="rounded-lg bg-red-500/10 px-3 py-2 text-center text-sm text-red-400">{error}</p>
                             )}
 
                             <div className="flex gap-2">
                                 <input
                                     type="text"
-                                    required
-                                    value={staffCode}
-                                    onChange={(e) => setStaffCode(e.target.value.toUpperCase())}
+                                    value={code}
+                                    onChange={(e) => handleCodeChange(e.target.value)}
                                     placeholder="ABC123"
                                     maxLength={6}
-                                    className="h-12 flex-1 rounded-xl border border-slate-700 bg-slate-800/50 px-4 text-center text-lg font-mono font-bold tracking-[0.3em] text-white placeholder:text-slate-600 placeholder:tracking-[0.3em] outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all uppercase"
                                     autoFocus
+                                    inputMode="text"
+                                    autoComplete="off"
+                                    autoCapitalize="characters"
+                                    className="h-12 flex-1 rounded-xl border border-slate-700 bg-slate-800/50 px-4 text-center text-lg font-bold tracking-[0.3em] text-white placeholder:text-slate-600 placeholder:tracking-[0.3em] outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all"
                                 />
                                 <button
                                     type="submit"
-                                    disabled={isJoiningStaff || staffCode.length < 4}
-                                    className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-lg shadow-indigo-500/20 transition-all active:scale-95 disabled:opacity-50"
+                                    disabled={code.length < 6 || isLoading}
+                                    className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-lg shadow-indigo-500/20 transition-all active:scale-95 disabled:opacity-40"
                                 >
-                                    {isJoiningStaff ? (
+                                    {isLoading ? (
                                         <Loader2 className="h-4 w-4 animate-spin" />
                                     ) : (
                                         <ArrowRight className="h-4 w-4" />
@@ -158,7 +154,7 @@ export default function SignInPage() {
 
                             <button
                                 type="button"
-                                onClick={() => { setShowStaffInput(false); setError(""); setStaffCode(""); }}
+                                onClick={() => { setShowStaffInput(false); setError(""); setCode(""); }}
                                 className="text-xs text-slate-500 hover:text-slate-400 transition-colors"
                             >
                                 Cancel
@@ -172,7 +168,6 @@ export default function SignInPage() {
                     Manage inventory across your repair shops
                 </p>
 
-                {/* PWA Install */}
                 <PWAInstallBanner />
             </div>
         </div>

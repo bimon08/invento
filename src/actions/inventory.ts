@@ -4,15 +4,15 @@ import { createServerAction } from "zsa";
 import { z } from "zod";
 import { db } from "@/db";
 import { products } from "@/db/schema";
-import { auth } from "@clerk/nextjs/server";
+import { getAppSession } from "@/lib/auth";
 import { eq, and, like, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 
-// Helper to get orgId with auth check
+// Helper to get orgId with auth check (supports both admin + staff)
 async function getOrgId() {
-    const { orgId } = await auth();
-    if (!orgId) throw new Error("No organization selected");
-    return orgId;
+    const session = await getAppSession();
+    if (!session) throw new Error("Not authenticated");
+    return session.orgId;
 }
 
 // ── Get Products ────────────────────────────────────────────────────────────────

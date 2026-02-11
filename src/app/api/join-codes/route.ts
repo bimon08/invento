@@ -1,4 +1,4 @@
-import { auth } from "@clerk/nextjs/server";
+import { auth, clerkClient } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import { db } from "@/db";
 import { joinCodes } from "@/db/schema";
@@ -30,10 +30,15 @@ export async function GET() {
 
 // POST — generate a new join code
 export async function POST(req: Request) {
-    const { userId, orgId, orgSlug } = await auth();
+    const { userId, orgId } = await auth();
     if (!userId || !orgId) {
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+
+    // Fetch the actual org name from Clerk
+    const client = await clerkClient();
+    const org = await client.organizations.getOrganization({ organizationId: orgId });
+    const orgName = org.name || "Store";
 
     const body = await req.json();
     const role = body.role === "org:admin" ? "org:admin" : "org:member";
@@ -48,7 +53,7 @@ export async function POST(req: Request) {
 
     const [newCode] = await db.insert(joinCodes).values({
         orgId,
-        orgName: orgSlug || "Store",
+        orgName,
         code,
         role,
         createdBy: userId,

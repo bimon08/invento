@@ -6,20 +6,38 @@ const isPublicRoute = createRouteMatcher([
     "/sign-up(.*)",
     "/org-selection(.*)",
     "/join(.*)",
+    "/staff-login(.*)",
     "/api/join-codes/validate(.*)",
+    "/api/staff(.*)",
 ]);
 
 export default clerkMiddleware(async (auth, req) => {
-    if (!isPublicRoute(req)) {
+    if (isPublicRoute(req)) {
+        return NextResponse.next();
+    }
+
+    // Check for staff session cookie first
+    const staffToken = req.cookies.get("staff-session")?.value;
+    if (staffToken) {
+        // Staff has a session cookie — let them through
+        return NextResponse.next();
+    }
+
+    // Otherwise require Clerk auth (admin)
+    try {
         await auth.protect();
+    } catch {
+        // Not authenticated — redirect to sign-in
+        const signIn = new URL("/sign-in", req.url);
+        return NextResponse.redirect(signIn);
+    }
 
-        const { orgId } = await auth();
+    const { orgId } = await auth();
 
-        // If user has no active org and is not on the org-selection page, redirect them
-        if (!orgId && !req.nextUrl.pathname.startsWith("/org-selection")) {
-            const orgSelection = new URL("/org-selection", req.url);
-            return NextResponse.redirect(orgSelection);
-        }
+    // If user has no active org and is not on the org-selection page, redirect them
+    if (!orgId && !req.nextUrl.pathname.startsWith("/org-selection")) {
+        const orgSelection = new URL("/org-selection", req.url);
+        return NextResponse.redirect(orgSelection);
     }
 });
 
