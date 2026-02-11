@@ -30,11 +30,13 @@ interface UserMenuProps {
 export function UserMenu({ totalValue }: UserMenuProps) {
     const { user } = useUser();
     const { signOut } = useClerk();
-    const { organization } = useOrganization();
+    const { organization, membership } = useOrganization();
     const { isLoaded, userMemberships, setActive, createOrganization } =
         useOrganizationList({
             userMemberships: { infinite: true },
         });
+
+    const isAdmin = membership?.role === "org:admin";
 
     const router = useRouter();
     const [open, setOpen] = useState(false);
@@ -257,97 +259,101 @@ export function UserMenu({ totalValue }: UserMenuProps) {
                                                 </button>
                                             )}
 
-                                            {/* Three-dot menu */}
-                                            <div className="relative shrink-0">
-                                                <button
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        setMenuOpenId(
-                                                            menuOpenId === mem.organization.id
-                                                                ? null
-                                                                : mem.organization.id
-                                                        );
-                                                    }}
-                                                    className="rounded-lg p-1.5 text-slate-500 transition-colors hover:bg-slate-800 hover:text-slate-300"
-                                                >
-                                                    <MoreVertical className="h-4 w-4" />
-                                                </button>
+                                            {/* Three-dot menu — admin only */}
+                                            {isAdmin && (
+                                                <div className="relative shrink-0">
+                                                    <button
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            setMenuOpenId(
+                                                                menuOpenId === mem.organization.id
+                                                                    ? null
+                                                                    : mem.organization.id
+                                                            );
+                                                        }}
+                                                        className="rounded-lg p-1.5 text-slate-500 transition-colors hover:bg-slate-800 hover:text-slate-300"
+                                                    >
+                                                        <MoreVertical className="h-4 w-4" />
+                                                    </button>
 
-                                                {menuOpenId === mem.organization.id && (
-                                                    <div className="absolute right-0 top-full z-10 mt-1 w-36 overflow-hidden rounded-xl border border-slate-700/50 bg-slate-900 shadow-xl shadow-black/30">
-                                                        <button
-                                                            onClick={() => {
-                                                                setMenuOpenId(null);
-                                                                setRenamingId(mem.organization.id);
-                                                                setRenameValue(mem.organization.name || "");
-                                                            }}
-                                                            className="flex w-full items-center gap-2.5 px-3.5 py-2.5 text-sm text-slate-300 transition-colors hover:bg-slate-800 hover:text-white"
-                                                        >
-                                                            <Pencil className="h-3.5 w-3.5 text-slate-500" />
-                                                            Rename
-                                                        </button>
-                                                        <button
-                                                            onClick={() => {
-                                                                setMenuOpenId(null);
-                                                                handleDelete(
-                                                                    mem.organization.id,
-                                                                    mem.organization.name
-                                                                );
-                                                            }}
-                                                            disabled={deletingId === mem.organization.id}
-                                                            className="flex w-full items-center gap-2.5 px-3.5 py-2.5 text-sm text-red-400 transition-colors hover:bg-red-500/10"
-                                                        >
-                                                            {deletingId === mem.organization.id ? (
-                                                                <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                                                            ) : (
-                                                                <Trash2 className="h-3.5 w-3.5" />
-                                                            )}
-                                                            Delete
-                                                        </button>
-                                                    </div>
-                                                )}
-                                            </div>
+                                                    {menuOpenId === mem.organization.id && (
+                                                        <div className="absolute right-0 top-full z-10 mt-1 w-36 overflow-hidden rounded-xl border border-slate-700/50 bg-slate-900 shadow-xl shadow-black/30">
+                                                            <button
+                                                                onClick={() => {
+                                                                    setMenuOpenId(null);
+                                                                    setRenamingId(mem.organization.id);
+                                                                    setRenameValue(mem.organization.name || "");
+                                                                }}
+                                                                className="flex w-full items-center gap-2.5 px-3.5 py-2.5 text-sm text-slate-300 transition-colors hover:bg-slate-800 hover:text-white"
+                                                            >
+                                                                <Pencil className="h-3.5 w-3.5 text-slate-500" />
+                                                                Rename
+                                                            </button>
+                                                            <button
+                                                                onClick={() => {
+                                                                    setMenuOpenId(null);
+                                                                    handleDelete(
+                                                                        mem.organization.id,
+                                                                        mem.organization.name
+                                                                    );
+                                                                }}
+                                                                disabled={deletingId === mem.organization.id}
+                                                                className="flex w-full items-center gap-2.5 px-3.5 py-2.5 text-sm text-red-400 transition-colors hover:bg-red-500/10"
+                                                            >
+                                                                {deletingId === mem.organization.id ? (
+                                                                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                                                ) : (
+                                                                    <Trash2 className="h-3.5 w-3.5" />
+                                                                )}
+                                                                Delete
+                                                            </button>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            )}
                                         </div>
                                     ))}
                                 </div>
 
-                                {/* Create Store */}
-                                <div className="mt-2">
-                                    {!showCreate ? (
-                                        <button
-                                            onClick={() => setShowCreate(true)}
-                                            className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-indigo-400 transition-colors hover:bg-indigo-500/10"
-                                        >
-                                            <Plus className="h-4 w-4" />
-                                            Create new store
-                                        </button>
-                                    ) : (
-                                        <form
-                                            onSubmit={handleCreate}
-                                            className="flex gap-2 px-1 pt-1"
-                                        >
-                                            <input
-                                                type="text"
-                                                value={newName}
-                                                onChange={(e) => setNewName(e.target.value)}
-                                                placeholder="Store name"
-                                                className="h-10 flex-1 rounded-xl border border-slate-700 bg-slate-800 px-3 text-sm text-white placeholder:text-slate-500 outline-none focus:border-indigo-500 transition-all"
-                                                autoFocus
-                                            />
+                                {/* Create Store — admin only */}
+                                {isAdmin && (
+                                    <div className="mt-2">
+                                        {!showCreate ? (
                                             <button
-                                                type="submit"
-                                                disabled={isCreating || !newName.trim()}
-                                                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-indigo-500 text-white transition-all hover:bg-indigo-600 disabled:opacity-50"
+                                                onClick={() => setShowCreate(true)}
+                                                className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-indigo-400 transition-colors hover:bg-indigo-500/10"
                                             >
-                                                {isCreating ? (
-                                                    <Loader2 className="h-4 w-4 animate-spin" />
-                                                ) : (
-                                                    <Plus className="h-4 w-4" />
-                                                )}
+                                                <Plus className="h-4 w-4" />
+                                                Create new store
                                             </button>
-                                        </form>
-                                    )}
-                                </div>
+                                        ) : (
+                                            <form
+                                                onSubmit={handleCreate}
+                                                className="flex gap-2 px-1 pt-1"
+                                            >
+                                                <input
+                                                    type="text"
+                                                    value={newName}
+                                                    onChange={(e) => setNewName(e.target.value)}
+                                                    placeholder="Store name"
+                                                    className="h-10 flex-1 rounded-xl border border-slate-700 bg-slate-800 px-3 text-sm text-white placeholder:text-slate-500 outline-none focus:border-indigo-500 transition-all"
+                                                    autoFocus
+                                                />
+                                                <button
+                                                    type="submit"
+                                                    disabled={isCreating || !newName.trim()}
+                                                    className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-indigo-500 text-white transition-all hover:bg-indigo-600 disabled:opacity-50"
+                                                >
+                                                    {isCreating ? (
+                                                        <Loader2 className="h-4 w-4 animate-spin" />
+                                                    ) : (
+                                                        <Plus className="h-4 w-4" />
+                                                    )}
+                                                </button>
+                                            </form>
+                                        )}
+                                    </div>
+                                )}
                             </div>
                         )}
 
@@ -364,14 +370,16 @@ export function UserMenu({ totalValue }: UserMenuProps) {
                                 <User className="h-4 w-4 text-slate-500" />
                                 Profile
                             </button>
-                            <Link
-                                href="/staff"
-                                onClick={closeSidebar}
-                                className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-slate-300 transition-colors hover:bg-slate-800 hover:text-white"
-                            >
-                                <Users className="h-4 w-4 text-slate-500" />
-                                Staff
-                            </Link>
+                            {isAdmin && (
+                                <Link
+                                    href="/staff"
+                                    onClick={closeSidebar}
+                                    className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-slate-300 transition-colors hover:bg-slate-800 hover:text-white"
+                                >
+                                    <Users className="h-4 w-4 text-slate-500" />
+                                    Staff
+                                </Link>
+                            )}
                         </div>
                     </div>
                 </div>
