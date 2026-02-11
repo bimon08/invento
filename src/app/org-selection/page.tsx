@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { Package, Loader2, Store } from "lucide-react";
 
 export default function OrgSelectionPage() {
-    const { isLoaded, createOrganization } = useOrganizationList();
+    const { isLoaded, createOrganization, setActive } = useOrganizationList();
     const router = useRouter();
 
     const [name, setName] = useState("");
@@ -15,13 +15,15 @@ export default function OrgSelectionPage() {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!isLoaded || !createOrganization) return;
+        if (!isLoaded || !createOrganization || !setActive) return;
 
         setIsLoading(true);
         setError("");
 
         try {
-            await createOrganization({ name });
+            const org = await createOrganization({ name });
+            // Set the new org as active so the session has orgId
+            await setActive({ organization: org.id });
             // Hard redirect to ensure session picks up the new org
             window.location.href = "/";
         } catch (err: unknown) {
