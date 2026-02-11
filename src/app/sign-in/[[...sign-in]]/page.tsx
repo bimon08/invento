@@ -55,8 +55,8 @@ export default function SignInPage() {
             const firstError = clerkError.errors?.[0];
 
             if (firstError?.code === "session_exists") {
-                // Already signed in — hard redirect to bypass any caching
-                window.location.href = "/";
+                // Session is pending (choose-organization task) — go to org selection
+                window.location.href = "/org-selection";
                 return;
             } else if (firstError?.code === "form_identifier_not_found") {
                 setShowSignUpPrompt(true);
