@@ -93,22 +93,31 @@ export function AddProductDrawer({ open, onOpenChange }: AddProductDrawerProps) 
     };
 
     return (
-        <Drawer.Root open={open} onOpenChange={onOpenChange}>
+        <Drawer.Root open={open} onOpenChange={onOpenChange} handleOnly>
             <Drawer.Portal>
                 <Drawer.Overlay className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm" />
                 <Drawer.Content className="fixed inset-x-0 bottom-0 z-50 flex flex-col rounded-t-3xl border-t border-slate-700/50 bg-slate-900 max-h-[90dvh]">
-                    {/* Drag handle */}
-                    <div className="mx-auto mt-3 h-1.5 w-12 shrink-0 rounded-full bg-slate-700" />
+                    {/* Drag handle — only this area triggers dismiss */}
+                    <Drawer.Handle className="mx-auto mt-3 mb-0 h-1.5 w-12 shrink-0 rounded-full bg-slate-700" />
 
                     {/* Scrollable content */}
                     <div
                         ref={scrollRef}
-                        className="overflow-y-auto overscroll-contain px-6 pb-8 pt-4 transition-[max-height] duration-200"
+                        className="overflow-y-auto overscroll-contain px-6 pb-8 pt-4"
                         style={{ maxHeight: "85dvh" }}
                     >
-                        <Drawer.Title className="mb-5 text-xl font-bold text-white">
-                            Add Product
-                        </Drawer.Title>
+                        <div className="flex items-center justify-between mb-5">
+                            <Drawer.Title className="text-xl font-bold text-white">
+                                Add Product
+                            </Drawer.Title>
+                            <button
+                                type="button"
+                                onClick={() => onOpenChange(false)}
+                                className="rounded-lg px-3 py-1.5 text-xs font-medium text-slate-400 transition-colors hover:bg-slate-800 hover:text-white"
+                            >
+                                Cancel
+                            </button>
+                        </div>
 
                         <form ref={formRef} onSubmit={handleSubmit} className="flex flex-col gap-4">
                             {/* Name */}
@@ -241,6 +250,6 @@ export function AddProductDrawer({ open, onOpenChange }: AddProductDrawerProps) 
                     </div>
                 </Drawer.Content>
             </Drawer.Portal>
-        </Drawer.Root>
+        </Drawer.Root >
     );
 }

@@ -88,13 +88,13 @@ export function EditProductDrawer({
     };
 
     return (
-        <Drawer.Root open={open} onOpenChange={onOpenChange}>
+        <Drawer.Root open={open} onOpenChange={onOpenChange} handleOnly>
             <Drawer.Portal>
                 <Drawer.Overlay className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm" />
-                <Drawer.Content className="fixed inset-x-0 bottom-0 z-50 mt-24 flex flex-col rounded-t-3xl border-t border-slate-700/50 bg-slate-900">
-                    <div className="mx-auto mt-3 h-1.5 w-12 shrink-0 rounded-full bg-slate-700" />
+                <Drawer.Content className="fixed inset-x-0 bottom-0 z-50 flex flex-col rounded-t-3xl border-t border-slate-700/50 bg-slate-900 max-h-[90dvh]">
+                    <Drawer.Handle className="mx-auto mt-3 mb-0 h-1.5 w-12 shrink-0 rounded-full bg-slate-700" />
 
-                    <div className="mx-auto w-full max-w-lg px-6 pb-8 pt-4">
+                    <div className="mx-auto w-full max-w-lg overflow-y-auto overscroll-contain px-6 pb-8 pt-4" style={{ maxHeight: "85dvh" }}>
                         <div className="mb-6 flex items-center justify-between">
                             <Drawer.Title className="text-xl font-bold text-white">
                                 Edit Product
