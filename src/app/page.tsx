@@ -9,6 +9,7 @@ import { SearchBar } from "@/components/SearchBar";
 import { InventoryList } from "@/components/InventoryList";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
 import { Package, ArrowRight } from "lucide-react";
+import { PWAInstallBanner } from "@/components/PWAInstallBanner";
 import Link from "next/link";
 
 interface PageProps {
@@ -40,6 +41,7 @@ export default async function DashboardPage({ searchParams }: PageProps) {
           Create Your Store
           <ArrowRight className="h-4 w-4" />
         </Link>
+        <PWAInstallBanner />
       </div>
     );
   }
@@ -72,6 +74,7 @@ export default async function DashboardPage({ searchParams }: PageProps) {
       <div className="flex min-h-screen flex-col bg-slate-950">
         <Header totalValue={productList.reduce((acc, p) => acc + p.price * p.stock, 0)} />
         <SearchBar />
+        <PWAInstallBanner />
         <main className="flex-1 pb-24">
           <InventoryList products={productList} />
         </main>

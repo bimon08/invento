@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useSignIn, useAuth } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import { Package, Loader2, Eye, EyeOff } from "lucide-react";
+import { PWAInstallBanner } from "@/components/PWAInstallBanner";
 import Link from "next/link";
 
 export default function SignInPage() {
@@ -48,8 +49,15 @@ export default function SignInPage() {
         }
     };
 
+    const handleFocus = (e: React.FocusEvent<HTMLInputElement>) => {
+        // Wait for virtual keyboard to open, then scroll the input into view
+        setTimeout(() => {
+            e.target.scrollIntoView({ behavior: "smooth", block: "center" });
+        }, 300);
+    };
+
     return (
-        <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950 px-4">
+        <div className="flex min-h-[100dvh] items-center justify-center bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950 px-4 py-8 overflow-y-auto">
             <div className="w-full max-w-sm">
                 {/* Logo */}
                 <div className="mb-8 flex flex-col items-center text-center">
@@ -123,6 +131,7 @@ export default function SignInPage() {
                                 required
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
+                                onFocus={handleFocus}
                                 placeholder="you@example.com"
                                 className="h-12 w-full rounded-xl border border-slate-700 bg-slate-800 px-4 text-sm text-white placeholder:text-slate-500 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all"
                                 autoComplete="email"
@@ -140,6 +149,7 @@ export default function SignInPage() {
                                     required
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
+                                    onFocus={handleFocus}
                                     placeholder="••••••••"
                                     className="h-12 w-full rounded-xl border border-slate-700 bg-slate-800 px-4 pr-12 text-sm text-white placeholder:text-slate-500 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all"
                                     autoComplete="current-password"
@@ -182,6 +192,9 @@ export default function SignInPage() {
                         Sign up
                     </Link>
                 </p>
+
+                {/* PWA Install */}
+                <PWAInstallBanner />
             </div>
         </div>
     );
