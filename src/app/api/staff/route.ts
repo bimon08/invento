@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { clerkClient } from "@clerk/nextjs/server";
 import { db } from "@/db";
 import { joinCodes, staffMembers } from "@/db/schema";
 import { eq, and } from "drizzle-orm";
@@ -35,9 +36,19 @@ export async function GET(req: Request) {
         .from(staffMembers)
         .where(eq(staffMembers.orgId, joinCode.orgId));
 
+    // Fetch fresh org name from Clerk
+    let orgName = joinCode.orgName;
+    try {
+        const client = await clerkClient();
+        const org = await client.organizations.getOrganization({ organizationId: joinCode.orgId });
+        if (org.name) orgName = org.name;
+    } catch {
+        // Fall back to stored name
+    }
+
     return NextResponse.json({
         orgId: joinCode.orgId,
-        orgName: joinCode.orgName,
+        orgName,
         members: members.map((m) => ({ id: m.id, username: m.username })),
     });
 }
