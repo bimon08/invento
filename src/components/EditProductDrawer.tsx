@@ -35,7 +35,7 @@ export function EditProductDrawer({
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [name, setName] = useState("");
     const [brand, setBrand] = useState("");
-    const [model, setModel] = useState("");
+
     const [category, setCategory] = useState("");
     const [price, setPrice] = useState("");
     const [stock, setStock] = useState("");
@@ -46,7 +46,7 @@ export function EditProductDrawer({
         if (open && product) {
             setName(product.name);
             setBrand(product.brand || "");
-            setModel(product.model || "");
+
             setCategory(product.category || "");
             setPrice(product.price.toString());
             setStock(product.stock.toString());
@@ -64,7 +64,7 @@ export function EditProductDrawer({
                 id: product.id,
                 name,
                 brand,
-                model,
+
                 category,
                 price: parseFloat(price) || 0,
                 stock: parseInt(stock) || 0,
@@ -179,20 +179,7 @@ export function EditProductDrawer({
                                     />
                                 </div>
 
-                                {/* Model */}
-                                <div>
-                                    <label className="mb-1.5 block text-xs font-medium text-slate-400">
-                                        Model
-                                    </label>
-                                    <input
-                                        type="text"
-                                        value={model}
-                                        onChange={(e) => setModel(e.target.value)}
-                                        placeholder="e.g. iPhone 15 Pro Max"
-                                        autoComplete="off"
-                                        className="h-11 w-full rounded-xl border border-slate-700/60 bg-slate-900/60 px-4 text-sm text-white placeholder:text-slate-600 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all"
-                                    />
-                                </div>
+
                             </div>
 
                             {/* ── Classification Section ── */}

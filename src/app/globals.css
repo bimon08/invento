@@ -2,25 +2,236 @@
 
 /* ── Invento Theme Tokens ────────────────────────────────────────────────── */
 @theme inline {
-  --color-background: #020617;
-  --color-foreground: #f1f5f9;
+  --color-background: var(--bg);
+  --color-foreground: var(--fg);
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
 }
 
-/* ── Base Styles ─────────────────────────────────────────────────────────── */
-:root {
-  --background: #020617;
-  --foreground: #f1f5f9;
+/* ── Dark Theme (default) ────────────────────────────────────────────────── */
+:root,
+.dark {
+  --bg: #020617;
+  --fg: #f1f5f9;
+  --surface: #0f172a;
+  --surface-2: #1e293b;
+  --surface-3: #334155;
+  --border: rgba(51, 65, 85, 0.5);
+  --border-light: rgba(51, 65, 85, 0.3);
+  --text-primary: #f1f5f9;
+  --text-secondary: #94a3b8;
+  --text-muted: #64748b;
+  --header-bg: rgba(2, 6, 23, 0.8);
+  --card-from: rgba(30, 41, 59, 0.6);
+  --card-to: rgba(15, 23, 42, 0.8);
+  --sidebar-bg: #020617;
+  --stat-bg: rgba(30, 41, 59, 0.8);
+  --input-bg: rgba(15, 23, 42, 0.6);
+  --input-border: rgba(51, 65, 85, 0.6);
   color-scheme: dark;
 }
 
+/* ── Light Theme ─────────────────────────────────────────────────────────── */
+.light {
+  --bg: #f8fafc;
+  --fg: #0f172a;
+  --surface: #ffffff;
+  --surface-2: #f1f5f9;
+  --surface-3: #e2e8f0;
+  --border: rgba(100, 116, 139, 0.25);
+  --border-light: rgba(100, 116, 139, 0.15);
+  --text-primary: #0f172a;
+  --text-secondary: #334155;
+  --text-muted: #64748b;
+  --header-bg: rgba(255, 255, 255, 0.85);
+  --card-from: rgba(255, 255, 255, 1);
+  --card-to: rgba(241, 245, 249, 1);
+  --sidebar-bg: #ffffff;
+  --stat-bg: #ffffff;
+  --input-bg: #ffffff;
+  --input-border: rgba(148, 163, 184, 0.4);
+  color-scheme: light;
+}
+
+/* ── Override dark backgrounds in light mode ─────────────────────────────── */
+.light .bg-slate-950 {
+  background-color: var(--bg) !important;
+}
+
+.light .bg-slate-950\/80 {
+  background-color: var(--header-bg) !important;
+}
+
+.light .bg-slate-950\/50 {
+  background-color: var(--surface-2) !important;
+}
+
+.light .bg-slate-900 {
+  background-color: var(--surface) !important;
+}
+
+.light .bg-slate-900\/50 {
+  background-color: var(--surface) !important;
+}
+
+.light .bg-slate-900\/60 {
+  background-color: var(--input-bg) !important;
+}
+
+.light .bg-slate-900\/80 {
+  background-color: var(--surface) !important;
+}
+
+.light .bg-slate-800 {
+  background-color: var(--surface-2) !important;
+}
+
+.light .bg-slate-800\/80 {
+  background-color: var(--surface) !important;
+}
+
+.light .bg-slate-800\/60 {
+  background-color: var(--surface) !important;
+}
+
+.light .bg-slate-800\/50 {
+  background-color: var(--surface-2) !important;
+}
+
+.light .bg-slate-800\/40 {
+  background-color: var(--surface-2) !important;
+}
+
+.light .bg-slate-800\/30 {
+  background-color: var(--surface-2) !important;
+}
+
+.light .bg-slate-700\/40 {
+  background-color: rgba(226, 232, 240, 0.6) !important;
+}
+
+/* ── Override text colors ────────────────────────────────────────────────── */
+.light .text-white {
+  color: #0f172a !important;
+}
+
+.light .text-slate-200 {
+  color: #1e293b !important;
+}
+
+.light .text-slate-300 {
+  color: #334155 !important;
+}
+
+.light .text-slate-400 {
+  color: #475569 !important;
+}
+
+.light .text-slate-500 {
+  color: #64748b !important;
+}
+
+.light .text-slate-600 {
+  color: #64748b !important;
+}
+
+/* ── Override borders ────────────────────────────────────────────────────── */
+.light .border-slate-700\/50,
+.light .border-slate-700\/40,
+.light .border-slate-700\/60,
+.light .border-slate-800,
+.light .border-slate-800\/50,
+.light .border-slate-800\/80 {
+  border-color: rgba(148, 163, 184, 0.35) !important;
+}
+
+/* ── Override input placeholders ─────────────────────────────────────────── */
+.light .placeholder\:text-slate-600::placeholder,
+.light .placeholder\:text-slate-500::placeholder {
+  color: #94a3b8 !important;
+}
+
+/* ── Override card gradients ─────────────────────────────────────────────── */
+.light .from-slate-800\/60 {
+  --tw-gradient-from: rgba(255, 255, 255, 1) !important;
+}
+
+.light .to-slate-900\/80 {
+  --tw-gradient-to: rgba(241, 245, 249, 1) !important;
+}
+
+.light .from-slate-800\/80 {
+  --tw-gradient-from: rgba(255, 255, 255, 1) !important;
+}
+
+/* ── Override accent colors for better contrast on light bg ──────────────── */
+.light .text-indigo-400 {
+  color: #4f46e5 !important;
+}
+
+.light .text-emerald-400 {
+  color: #059669 !important;
+}
+
+.light .text-amber-400 {
+  color: #d97706 !important;
+}
+
+.light .text-red-400 {
+  color: #dc2626 !important;
+}
+
+.light .bg-indigo-500\/10 {
+  background-color: rgba(79, 70, 229, 0.08) !important;
+}
+
+.light .bg-emerald-500\/10 {
+  background-color: rgba(5, 150, 105, 0.08) !important;
+}
+
+.light .bg-amber-500\/10 {
+  background-color: rgba(217, 119, 6, 0.08) !important;
+}
+
+.light .bg-red-500\/10 {
+  background-color: rgba(220, 38, 38, 0.06) !important;
+}
+
+.light .border-red-500\/20 {
+  border-color: rgba(220, 38, 38, 0.2) !important;
+}
+
+/* ── Shadows for cards in light mode ─────────────────────────────────────── */
+.light .shadow-lg {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08) !important;
+}
+
+/* ── Override ring colors ────────────────────────────────────────────────── */
+.light .ring-indigo-500\/20 {
+  --tw-ring-color: rgba(79, 70, 229, 0.15) !important;
+}
+
+/* ── Light mode sidebar ─────────────────────────────────────────────────── */
+.light .bg-slate-950[class*="fixed"] {
+  background-color: var(--sidebar-bg) !important;
+}
+
+/* ── Light mode scrollbar ────────────────────────────────────────────────── */
+.light ::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.4);
+}
+
+.light ::-webkit-scrollbar-thumb:hover {
+  background: rgba(148, 163, 184, 0.6);
+}
+
+/* ── Base Styles ─────────────────────────────────────────────────────────── */
 * {
   -webkit-tap-highlight-color: transparent;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
+  background: var(--bg);
+  color: var(--fg);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -71,6 +282,11 @@ input[type="number"] {
 /* ── Vaul Drawer Animation Fix ───────────────────────────────────────────── */
 [vaul-drawer] {
   touch-action: none;
+}
+
+/* Light mode drawer styling */
+.light [vaul-drawer] {
+  background: var(--surface) !important;
 }
 
 /* ── Smooth Page Transitions ─────────────────────────────────────────────── */

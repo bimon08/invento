@@ -12,6 +12,7 @@ import {
     ChevronRight,
     Tag,
     Layers,
+    ArrowDownUp,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -30,6 +31,8 @@ interface CategoryGroup {
 // Persist expanded category across re-renders caused by revalidatePath
 let persistedExpandedCategory: string | null = null;
 
+type StockFilter = "all" | "low" | "out";
+
 export function InventoryList({ products }: InventoryListProps) {
     const [addDrawerOpen, setAddDrawerOpen] = useState(false);
     const [editingProduct, setEditingProduct] = useState<Product | null>(null);
@@ -37,6 +40,8 @@ export function InventoryList({ products }: InventoryListProps) {
     const [expandedCategory, _setExpandedCategory] = useState<string | null>(
         persistedExpandedCategory
     );
+    const [stockFilter, setStockFilter] = useState<StockFilter>("all");
+    const [sortByQty, setSortByQty] = useState(false);
 
     const setExpandedCategory = (cat: string | null) => {
         persistedExpandedCategory = cat;
@@ -48,32 +53,45 @@ export function InventoryList({ products }: InventoryListProps) {
         setEditDrawerOpen(true);
     };
 
+    // Filter products based on stock filter
+    const filteredProducts = useMemo(() => {
+        if (stockFilter === "low") return products.filter((p) => p.stock <= p.minStock && p.stock > 0);
+        if (stockFilter === "out") return products.filter((p) => p.stock === 0);
+        return products;
+    }, [products, stockFilter]);
+
     // Group products by category
     const categories = useMemo(() => {
         const groups: Record<string, Product[]> = {};
-        products.forEach((p) => {
+        filteredProducts.forEach((p) => {
             const cat = p.category?.trim() || "Uncategorized";
             if (!groups[cat]) groups[cat] = [];
             groups[cat].push(p);
         });
 
         return Object.entries(groups)
-            .map(([name, prods]): CategoryGroup => ({
-                name,
-                products: prods,
-                totalStock: prods.reduce((sum, p) => sum + p.stock, 0),
-                totalValue: prods.reduce(
-                    (sum, p) => sum + p.price * p.stock,
-                    0
-                ),
-                lowStockCount: prods.filter((p) => p.stock <= p.minStock)
-                    .length,
-            }))
+            .map(([name, prods]): CategoryGroup => {
+                const sorted = sortByQty
+                    ? [...prods].sort((a, b) => a.stock - b.stock)
+                    : prods;
+                return {
+                    name,
+                    products: sorted,
+                    totalStock: prods.reduce((sum, p) => sum + p.stock, 0),
+                    totalValue: prods.reduce(
+                        (sum, p) => sum + p.price * p.stock,
+                        0
+                    ),
+                    lowStockCount: prods.filter((p) => p.stock <= p.minStock)
+                        .length,
+                };
+            })
             .sort((a, b) => a.name.localeCompare(b.name));
-    }, [products]);
+    }, [filteredProducts, sortByQty]);
 
     const totalValue = products.reduce((acc, p) => acc + p.price * p.stock, 0);
     const lowStockCount = products.filter((p) => p.stock <= p.minStock).length;
+    const outOfStockCount = products.filter((p) => p.stock === 0).length;
 
     const toggleCategory = (categoryName: string) => {
         setExpandedCategory(
@@ -103,6 +121,76 @@ export function InventoryList({ products }: InventoryListProps) {
                     </div>
                 </div>
             </div>
+
+            {/* Filter Chips */}
+            {products.length > 0 && (
+                <div className="border-b border-slate-800/50 bg-slate-950/50 px-4 py-2.5">
+                    <div className="mx-auto flex max-w-7xl items-center gap-2 overflow-x-auto">
+                        <button
+                            onClick={() => setStockFilter("all")}
+                            className={cn(
+                                "flex shrink-0 items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-medium transition-all active:scale-95",
+                                stockFilter === "all"
+                                    ? "bg-indigo-500/20 text-indigo-300 border border-indigo-500/40"
+                                    : "bg-slate-800/60 text-slate-400 border border-slate-700/40 hover:border-slate-600/50"
+                            )}
+                        >
+                            <Package className="h-3 w-3" />
+                            All
+                            <span className="ml-0.5 text-[10px] opacity-70">{products.length}</span>
+                        </button>
+
+                        <button
+                            onClick={() => setStockFilter("low")}
+                            className={cn(
+                                "flex shrink-0 items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-medium transition-all active:scale-95",
+                                stockFilter === "low"
+                                    ? "bg-amber-500/20 text-amber-300 border border-amber-500/40"
+                                    : "bg-slate-800/60 text-slate-400 border border-slate-700/40 hover:border-slate-600/50"
+                            )}
+                        >
+                            <AlertTriangle className="h-3 w-3" />
+                            Low Stock
+                            {lowStockCount > 0 && (
+                                <span className="ml-0.5 text-[10px] opacity-70">{lowStockCount}</span>
+                            )}
+                        </button>
+
+                        <button
+                            onClick={() => setStockFilter("out")}
+                            className={cn(
+                                "flex shrink-0 items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-medium transition-all active:scale-95",
+                                stockFilter === "out"
+                                    ? "bg-red-500/20 text-red-300 border border-red-500/40"
+                                    : "bg-slate-800/60 text-slate-400 border border-slate-700/40 hover:border-slate-600/50"
+                            )}
+                        >
+                            <Package className="h-3 w-3" />
+                            Out of Stock
+                            {outOfStockCount > 0 && (
+                                <span className="ml-0.5 text-[10px] opacity-70">{outOfStockCount}</span>
+                            )}
+                        </button>
+
+                        {/* Spacer */}
+                        <div className="flex-1" />
+
+                        {/* Sort by quantity */}
+                        <button
+                            onClick={() => setSortByQty(!sortByQty)}
+                            className={cn(
+                                "flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition-all active:scale-95",
+                                sortByQty
+                                    ? "bg-indigo-500/20 text-indigo-300 border border-indigo-500/40"
+                                    : "bg-slate-800/60 text-slate-400 border border-slate-700/40 hover:border-slate-600/50"
+                            )}
+                        >
+                            <ArrowDownUp className="h-3 w-3" />
+                            Qty
+                        </button>
+                    </div>
+                </div>
+            )}
 
             {/* Category List / Empty State */}
             <div className="mx-auto max-w-7xl px-4 py-6">

@@ -9,7 +9,6 @@ import {
     Plus,
     Package,
     Tag,
-    Smartphone,
     DollarSign,
     Hash,
     Bell,
@@ -27,7 +26,7 @@ export function AddProductDrawer({ open, onOpenChange }: AddProductDrawerProps) 
     const [isPending, startTransition] = useTransition();
     const [name, setName] = useState("");
     const [brand, setBrand] = useState("");
-    const [model, setModel] = useState("");
+
     const [category, setCategory] = useState("");
     const [price, setPrice] = useState("");
     const [stock, setStock] = useState("");
@@ -38,7 +37,7 @@ export function AddProductDrawer({ open, onOpenChange }: AddProductDrawerProps) 
     const resetForm = () => {
         setName("");
         setBrand("");
-        setModel("");
+
         setCategory("");
         setPrice("");
         setStock("");
@@ -81,7 +80,7 @@ export function AddProductDrawer({ open, onOpenChange }: AddProductDrawerProps) 
             const [, error] = await createProduct({
                 name,
                 brand,
-                model,
+
                 category,
                 price: parseFloat(price) || 0,
                 stock: parseInt(stock) || 0,
@@ -163,22 +162,7 @@ export function AddProductDrawer({ open, onOpenChange }: AddProductDrawerProps) 
                                     />
                                 </div>
 
-                                {/* Model */}
-                                <div>
-                                    <label className="mb-1.5 block text-xs font-medium text-slate-400">
-                                        Model
-                                    </label>
-                                    <input
-                                        type="text"
-                                        value={model}
-                                        onChange={(e) => setModel(e.target.value)}
-                                        onFocus={handleFocus}
-                                        placeholder="e.g. iPhone 15 Pro Max"
-                                        enterKeyHint="next"
-                                        autoComplete="off"
-                                        className="h-11 w-full rounded-xl border border-slate-700/60 bg-slate-900/60 px-4 text-sm text-white placeholder:text-slate-600 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all"
-                                    />
-                                </div>
+
                             </div>
 
                             {/* ── Classification Section ── */}

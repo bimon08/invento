@@ -22,9 +22,12 @@ import {
     MoreVertical,
     Store,
     Menu,
+    Sun,
+    Moon,
 } from "lucide-react";
 import { toast } from "sonner";
 import { broadcastLogout } from "@/lib/auth-sync";
+import { useTheme } from "./ThemeProvider";
 
 interface UserMenuProps {
     totalValue?: number;
@@ -36,6 +39,7 @@ interface UserMenuProps {
 
 export function UserMenu({ totalValue, staffUsername, storeName }: UserMenuProps) {
     const isStaff = !!staffUsername;
+    const { theme, toggleTheme } = useTheme();
 
     // Clerk hooks — only meaningful for admin users, but safe to call always
     const { user } = useUser();
@@ -429,13 +433,25 @@ export function UserMenu({ totalValue, staffUsername, storeName }: UserMenuProps
                             </div>
                         )}
 
-                    {/* ── Navigation — admin only ─────────────────────────── */}
+                    {/* ── Navigation / Settings ─────────────────────────── */}
                     {!isStaff && (
                         <div className="px-4 py-4">
                             <p className="mb-3 text-[10px] font-semibold uppercase tracking-wider text-slate-500">
                                 Settings
                             </p>
                             <div className="flex flex-col gap-1">
+                                {/* Theme toggle */}
+                                <button
+                                    onClick={toggleTheme}
+                                    className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-slate-300 transition-colors hover:bg-slate-800 hover:text-white"
+                                >
+                                    {theme === "dark" ? (
+                                        <Sun className="h-4 w-4 text-amber-400" />
+                                    ) : (
+                                        <Moon className="h-4 w-4 text-indigo-400" />
+                                    )}
+                                    {theme === "dark" ? "Light Mode" : "Dark Mode"}
+                                </button>
                                 <button
                                     onClick={closeSidebar}
                                     className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-slate-300 transition-colors hover:bg-slate-800 hover:text-white"
@@ -454,6 +470,26 @@ export function UserMenu({ totalValue, staffUsername, storeName }: UserMenuProps
                                     </Link>
                                 )}
                             </div>
+                        </div>
+                    )}
+
+                    {/* Staff-only theme toggle */}
+                    {isStaff && (
+                        <div className="px-4 py-4">
+                            <p className="mb-3 text-[10px] font-semibold uppercase tracking-wider text-slate-500">
+                                Appearance
+                            </p>
+                            <button
+                                onClick={toggleTheme}
+                                className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-slate-300 transition-colors hover:bg-slate-800 hover:text-white"
+                            >
+                                {theme === "dark" ? (
+                                    <Sun className="h-4 w-4 text-amber-400" />
+                                ) : (
+                                    <Moon className="h-4 w-4 text-indigo-400" />
+                                )}
+                                {theme === "dark" ? "Light Mode" : "Dark Mode"}
+                            </button>
                         </div>
                     )}
                 </div>
@@ -479,10 +515,10 @@ export function UserMenu({ totalValue, staffUsername, storeName }: UserMenuProps
 
     return (
         <>
-            {/* Trigger Button */}
+            {/* Trigger Button — mobile only */}
             <button
                 onClick={() => setOpen(true)}
-                className="flex h-10 w-10 items-center justify-center rounded-xl border border-slate-700/50 bg-slate-800/80 text-slate-300 transition-all hover:border-slate-600 hover:bg-slate-800 hover:text-white"
+                className="flex sm:hidden h-10 w-10 items-center justify-center rounded-xl border border-slate-700/50 bg-slate-800/80 text-slate-300 transition-all hover:border-slate-600 hover:bg-slate-800 hover:text-white"
             >
                 <Menu className="h-5 w-5" />
             </button>

@@ -5,6 +5,7 @@ import { dark } from "@clerk/themes";
 import { Toaster } from "sonner";
 import { ServiceWorkerRegister } from "@/components/ServiceWorkerRegister";
 import { AuthSyncListener } from "@/components/AuthSyncListener";
+import { ThemeProvider } from "@/components/ThemeProvider";
 import "./globals.css";
 
 const inter = Inter({
@@ -39,22 +40,24 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   const body = (
-    <html lang="en" className="dark">
+    <html lang="en" className="dark" suppressHydrationWarning>
       <body className={`${inter.variable} font-sans antialiased`}>
-        <ServiceWorkerRegister />
-        <AuthSyncListener />
-        {children}
-        <Toaster
-          theme="dark"
-          position="top-center"
-          toastOptions={{
-            style: {
-              background: "#1e293b",
-              border: "1px solid rgba(51, 65, 85, 0.5)",
-              color: "#f1f5f9",
-            },
-          }}
-        />
+        <ThemeProvider>
+          <ServiceWorkerRegister />
+          <AuthSyncListener />
+          {children}
+          <Toaster
+            position="top-center"
+            toastOptions={{
+              className: "invento-toast",
+              style: {
+                background: "var(--surface-2)",
+                border: "1px solid var(--border)",
+                color: "var(--fg)",
+              },
+            }}
+          />
+        </ThemeProvider>
       </body>
     </html>
   );
