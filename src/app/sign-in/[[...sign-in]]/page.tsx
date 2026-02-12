@@ -126,31 +126,32 @@ export default function SignInPage() {
                                 <p className="rounded-lg bg-red-500/10 px-3 py-2 text-center text-sm text-red-400">{error}</p>
                             )}
 
-                            <div className="flex gap-2">
-                                <input
-                                    type="text"
-                                    value={code}
-                                    onChange={(e) => handleCodeChange(e.target.value)}
-                                    placeholder="ABC123"
-                                    maxLength={6}
-                                    autoFocus
-                                    inputMode="text"
-                                    autoComplete="off"
-                                    autoCapitalize="characters"
-                                    className="h-12 flex-1 rounded-xl border border-slate-700 bg-slate-800/50 px-4 text-center text-lg font-bold tracking-[0.3em] text-white placeholder:text-slate-600 placeholder:tracking-[0.3em] outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all"
-                                />
-                                <button
-                                    type="submit"
-                                    disabled={code.length < 6 || isLoading}
-                                    className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-lg shadow-indigo-500/20 transition-all active:scale-95 disabled:opacity-40"
-                                >
-                                    {isLoading ? (
-                                        <Loader2 className="h-4 w-4 animate-spin" />
-                                    ) : (
+                            <input
+                                type="text"
+                                value={code}
+                                onChange={(e) => handleCodeChange(e.target.value)}
+                                placeholder="ABC123"
+                                maxLength={6}
+                                autoFocus
+                                inputMode="text"
+                                autoComplete="off"
+                                autoCapitalize="characters"
+                                className="h-12 w-full rounded-xl border border-slate-700 bg-slate-800/50 px-4 text-center text-lg font-bold tracking-[0.3em] text-white placeholder:text-slate-600 placeholder:tracking-[0.3em] outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all"
+                            />
+                            <button
+                                type="submit"
+                                disabled={code.length < 6 || isLoading}
+                                className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600 text-sm font-semibold text-white shadow-lg shadow-indigo-500/20 transition-all active:scale-95 disabled:opacity-40"
+                            >
+                                {isLoading ? (
+                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                ) : (
+                                    <>
+                                        Continue
                                         <ArrowRight className="h-4 w-4" />
-                                    )}
-                                </button>
-                            </div>
+                                    </>
+                                )}
+                            </button>
 
                             <button
                                 type="button"

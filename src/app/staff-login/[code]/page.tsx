@@ -2,6 +2,7 @@
 
 import { useState, useEffect, use } from "react";
 import { Package, Loader2, Store, User, UserPlus } from "lucide-react";
+import { broadcastLogin } from "@/lib/auth-sync";
 
 interface StaffMember {
     id: string;
@@ -61,6 +62,7 @@ export default function StaffSelectPage({ params }: { params: Promise<{ code: st
             }
 
             setDone(true);
+            broadcastLogin();
             setTimeout(() => { window.location.href = "/"; }, 1000);
         } catch {
             setError("Something went wrong");
@@ -93,6 +95,7 @@ export default function StaffSelectPage({ params }: { params: Promise<{ code: st
             }
 
             setDone(true);
+            broadcastLogin();
             setTimeout(() => { window.location.href = "/"; }, 1000);
         } catch {
             setError("Something went wrong");

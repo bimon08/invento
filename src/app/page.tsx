@@ -73,7 +73,10 @@ export default async function DashboardPage({ searchParams }: PageProps) {
   return (
     <NuqsAdapter>
       <div className="flex min-h-screen flex-col bg-slate-950">
-        <Header totalValue={productList.reduce((acc, p) => acc + p.price * p.stock, 0)} />
+        <Header
+          totalValue={productList.reduce((acc, p) => acc + p.price * p.stock, 0)}
+          staffUsername={session?.staffUsername}
+        />
         <SearchBar />
         <PWAInstallBanner />
         <main className="flex-1 pb-24">

@@ -22,6 +22,7 @@ import {
     MoreVertical,
 } from "lucide-react";
 import { toast } from "sonner";
+import { broadcastLogout } from "@/lib/auth-sync";
 
 interface UserMenuProps {
     totalValue?: number;
@@ -396,6 +397,7 @@ export function UserMenu({ totalValue }: UserMenuProps) {
                 <div className="border-t border-slate-800 px-4 py-4">
                     <button
                         onClick={() => {
+                            broadcastLogout();
                             signOut(() => router.push("/sign-in"));
                             closeSidebar();
                         }}
