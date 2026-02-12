@@ -9,6 +9,10 @@
     "orientation": "portrait",
     "background_color": "#020617",
     "theme_color": "#020617",
+    "categories": [
+        "business",
+        "productivity"
+    ],
     "icons": [
         {
             "src": "/icon-192.png",
@@ -33,6 +37,15 @@
             "sizes": "512x512",
             "type": "image/png",
             "purpose": "maskable"
+        }
+    ],
+    "screenshots": [
+        {
+            "src": "/icon-512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "form_factor": "narrow",
+            "label": "Invento - Inventory Management"
         }
     ]
 }

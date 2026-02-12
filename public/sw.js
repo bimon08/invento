@@ -1,10 +1,15 @@
-const CACHE_NAME = "invento-v1";
+const CACHE_NAME = "invento-v2";
 
-// Install — cache the app shell
+// Install — cache the app shell (only static assets that won't fail)
 self.addEventListener("install", (event) => {
     event.waitUntil(
         caches.open(CACHE_NAME).then((cache) => {
-            return cache.addAll(["/", "/sign-in"]);
+            return cache.addAll([
+                "/sign-in",
+                "/manifest.json",
+                "/icon-192.png",
+                "/icon-512.png",
+            ]);
         })
     );
     // Activate immediately

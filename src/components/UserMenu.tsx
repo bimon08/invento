@@ -21,6 +21,7 @@ import {
     X,
     MoreVertical,
     Store,
+    Menu,
 } from "lucide-react";
 import { toast } from "sonner";
 import { broadcastLogout } from "@/lib/auth-sync";
@@ -481,24 +482,9 @@ export function UserMenu({ totalValue, staffUsername, storeName }: UserMenuProps
             {/* Trigger Button */}
             <button
                 onClick={() => setOpen(true)}
-                className="flex items-center gap-2 rounded-xl border border-slate-700/50 bg-slate-800/80 px-3 py-2 text-sm transition-all hover:border-slate-600 hover:bg-slate-800"
+                className="flex h-10 w-10 items-center justify-center rounded-xl border border-slate-700/50 bg-slate-800/80 text-slate-300 transition-all hover:border-slate-600 hover:bg-slate-800 hover:text-white"
             >
-                {!isStaff && user?.imageUrl ? (
-                    <img
-                        src={user.imageUrl}
-                        alt={user.firstName || "User"}
-                        className="h-7 w-7 rounded-lg object-cover"
-                    />
-                ) : (
-                    <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 text-xs font-bold text-white">
-                        {initials}
-                    </div>
-                )}
-                {isStaff && (
-                    <span className="text-sm font-medium text-slate-200 max-w-[100px] truncate">
-                        {staffUsername}
-                    </span>
-                )}
+                <Menu className="h-5 w-5" />
             </button>
 
             {/* Portal sidebar to body - createPortal preserves React context (ClerkProvider) */}
