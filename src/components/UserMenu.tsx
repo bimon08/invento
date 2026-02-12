@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import {
     useUser,
@@ -20,15 +20,23 @@ import {
     Pencil,
     X,
     MoreVertical,
+    Store,
 } from "lucide-react";
 import { toast } from "sonner";
 import { broadcastLogout } from "@/lib/auth-sync";
 
 interface UserMenuProps {
     totalValue?: number;
+    /** If set, render in staff mode instead of admin/Clerk mode */
+    staffUsername?: string;
+    /** Store name shown in staff mode */
+    storeName?: string;
 }
 
-export function UserMenu({ totalValue }: UserMenuProps) {
+export function UserMenu({ totalValue, staffUsername, storeName }: UserMenuProps) {
+    const isStaff = !!staffUsername;
+
+    // Clerk hooks — only meaningful for admin users, but safe to call always
     const { user } = useUser();
     const { signOut } = useClerk();
     const { organization, membership } = useOrganization();
@@ -49,6 +57,7 @@ export function UserMenu({ totalValue }: UserMenuProps) {
     const [renameValue, setRenameValue] = useState("");
     const [menuOpenId, setMenuOpenId] = useState<string | null>(null);
     const [mounted, setMounted] = useState(false);
+    const [staffLoggingOut, setStaffLoggingOut] = useState(false);
 
     useEffect(() => {
         setMounted(true);
@@ -66,13 +75,27 @@ export function UserMenu({ totalValue }: UserMenuProps) {
         };
     }, [open]);
 
-    if (!user) return null;
+    // Staff mode: don't need a Clerk user
+    // Admin mode: need a Clerk user
+    if (!isStaff && !user) return null;
 
-    const initials = (
-        user.firstName?.[0] ||
-        user.emailAddresses[0]?.emailAddress[0] ||
-        "U"
-    ).toUpperCase();
+    const initials = isStaff
+        ? (staffUsername[0] || "S").toUpperCase()
+        : (
+            user!.firstName?.[0] ||
+            user!.emailAddresses[0]?.emailAddress[0] ||
+            "U"
+        ).toUpperCase();
+
+    const displayName = isStaff
+        ? staffUsername
+        : `${user!.firstName || ""} ${user!.lastName || ""}`.trim() || user!.emailAddresses[0]?.emailAddress;
+
+    const displaySub = isStaff
+        ? (storeName || "Staff")
+        : user!.emailAddresses[0]?.emailAddress;
+
+    // ── Admin-only handlers ──────────────────────────────────────────────
 
     const handleSwitch = async (orgId: string) => {
         if (!setActive) return;
@@ -140,9 +163,7 @@ export function UserMenu({ totalValue }: UserMenuProps) {
         setIsCreating(true);
         try {
             const org = await createOrganization({ name: newName.trim() });
-            // Switch to the newly created org
             await setActive({ organization: org.id });
-            // Refresh the memberships list
             await userMemberships?.revalidate?.();
             setNewName("");
             setShowCreate(false);
@@ -157,6 +178,24 @@ export function UserMenu({ totalValue }: UserMenuProps) {
         }
     };
 
+    // ── Shared handlers ──────────────────────────────────────────────────
+
+    const handleSignOut = async () => {
+        broadcastLogout();
+        if (isStaff) {
+            setStaffLoggingOut(true);
+            try {
+                await fetch("/api/staff", { method: "DELETE" });
+                window.location.href = "/sign-in";
+            } catch {
+                setStaffLoggingOut(false);
+            }
+        } else {
+            signOut(() => router.push("/sign-in"));
+            closeSidebar();
+        }
+    };
+
     const closeSidebar = () => {
         setOpen(false);
         setShowCreate(false);
@@ -164,6 +203,8 @@ export function UserMenu({ totalValue }: UserMenuProps) {
         setRenamingId(null);
         setMenuOpenId(null);
     };
+
+    // ── Sidebar content ──────────────────────────────────────────────────
 
     const sidebarContent = (
         <>
@@ -182,7 +223,7 @@ export function UserMenu({ totalValue }: UserMenuProps) {
                 {/* Header */}
                 <div className="flex items-center justify-between border-b border-slate-800 px-5 py-4">
                     <div className="flex items-center gap-3 min-w-0">
-                        {user.imageUrl ? (
+                        {!isStaff && user?.imageUrl ? (
                             <img
                                 src={user.imageUrl}
                                 alt={user.firstName || "User"}
@@ -195,10 +236,10 @@ export function UserMenu({ totalValue }: UserMenuProps) {
                         )}
                         <div className="min-w-0">
                             <p className="truncate text-sm font-semibold text-white">
-                                {user.firstName} {user.lastName}
+                                {displayName}
                             </p>
                             <p className="truncate text-xs text-slate-400">
-                                {user.emailAddresses[0]?.emailAddress}
+                                {displaySub}
                             </p>
                         </div>
                     </div>
@@ -212,8 +253,29 @@ export function UserMenu({ totalValue }: UserMenuProps) {
 
                 {/* Scrollable Content */}
                 <div className="flex-1 overflow-y-auto">
-                    {/* Stores Section */}
-                    {isLoaded &&
+                    {/* ── Staff: Current Store ────────────────────────────── */}
+                    {isStaff && storeName && (
+                        <div className="border-b border-slate-800 px-4 py-4">
+                            <p className="mb-3 text-[10px] font-semibold uppercase tracking-wider text-slate-500">
+                                Your Store
+                            </p>
+                            <div className="flex items-center gap-3 rounded-xl bg-slate-800/50 px-3 py-2.5">
+                                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 text-xs font-bold text-white shadow-sm">
+                                    {storeName[0]?.toUpperCase() || "?"}
+                                </div>
+                                <div className="min-w-0">
+                                    <p className="truncate text-sm font-medium text-slate-200">
+                                        {storeName}
+                                    </p>
+                                    <p className="text-[11px] text-slate-500">Staff member</p>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* ── Admin: Stores Section ───────────────────────────── */}
+                    {!isStaff &&
+                        isLoaded &&
                         userMemberships?.data &&
                         userMemberships.data.length > 0 && (
                             <div className="border-b border-slate-800 px-4 py-4">
@@ -366,44 +428,47 @@ export function UserMenu({ totalValue }: UserMenuProps) {
                             </div>
                         )}
 
-                    {/* Navigation Section */}
-                    <div className="px-4 py-4">
-                        <p className="mb-3 text-[10px] font-semibold uppercase tracking-wider text-slate-500">
-                            Settings
-                        </p>
-                        <div className="flex flex-col gap-1">
-                            <button
-                                onClick={closeSidebar}
-                                className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-slate-300 transition-colors hover:bg-slate-800 hover:text-white"
-                            >
-                                <User className="h-4 w-4 text-slate-500" />
-                                Profile
-                            </button>
-                            {isAdmin && (
-                                <Link
-                                    href="/staff"
+                    {/* ── Navigation — admin only ─────────────────────────── */}
+                    {!isStaff && (
+                        <div className="px-4 py-4">
+                            <p className="mb-3 text-[10px] font-semibold uppercase tracking-wider text-slate-500">
+                                Settings
+                            </p>
+                            <div className="flex flex-col gap-1">
+                                <button
                                     onClick={closeSidebar}
                                     className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-slate-300 transition-colors hover:bg-slate-800 hover:text-white"
                                 >
-                                    <Users className="h-4 w-4 text-slate-500" />
-                                    Staff
-                                </Link>
-                            )}
+                                    <User className="h-4 w-4 text-slate-500" />
+                                    Profile
+                                </button>
+                                {isAdmin && (
+                                    <Link
+                                        href="/staff"
+                                        onClick={closeSidebar}
+                                        className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-slate-300 transition-colors hover:bg-slate-800 hover:text-white"
+                                    >
+                                        <Users className="h-4 w-4 text-slate-500" />
+                                        Staff
+                                    </Link>
+                                )}
+                            </div>
                         </div>
-                    </div>
+                    )}
                 </div>
 
                 {/* Footer / Sign Out */}
                 <div className="border-t border-slate-800 px-4 py-4">
                     <button
-                        onClick={() => {
-                            broadcastLogout();
-                            signOut(() => router.push("/sign-in"));
-                            closeSidebar();
-                        }}
-                        className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-red-400 transition-colors hover:bg-red-500/10"
+                        onClick={handleSignOut}
+                        disabled={staffLoggingOut}
+                        className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-red-400 transition-colors hover:bg-red-500/10 disabled:opacity-50"
                     >
-                        <LogOut className="h-4 w-4" />
+                        {staffLoggingOut ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                            <LogOut className="h-4 w-4" />
+                        )}
                         Sign out
                     </button>
                 </div>
@@ -418,7 +483,7 @@ export function UserMenu({ totalValue }: UserMenuProps) {
                 onClick={() => setOpen(true)}
                 className="flex items-center gap-2 rounded-xl border border-slate-700/50 bg-slate-800/80 px-3 py-2 text-sm transition-all hover:border-slate-600 hover:bg-slate-800"
             >
-                {user.imageUrl ? (
+                {!isStaff && user?.imageUrl ? (
                     <img
                         src={user.imageUrl}
                         alt={user.firstName || "User"}
@@ -428,6 +493,11 @@ export function UserMenu({ totalValue }: UserMenuProps) {
                     <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 text-xs font-bold text-white">
                         {initials}
                     </div>
+                )}
+                {isStaff && (
+                    <span className="text-sm font-medium text-slate-200 max-w-[100px] truncate">
+                        {staffUsername}
+                    </span>
                 )}
             </button>
 

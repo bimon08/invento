@@ -11,15 +11,26 @@ const isPublicRoute = createRouteMatcher([
     "/api/staff(.*)",
 ]);
 
+const isAuthPage = createRouteMatcher([
+    "/sign-in(.*)",
+    "/sign-up(.*)",
+    "/staff-login(.*)",
+    "/org-selection(.*)",
+]);
+
 export default clerkMiddleware(async (auth, req) => {
+    // If already logged in as staff and visiting auth pages, redirect to dashboard
+    const staffToken = req.cookies.get("staff-session")?.value;
+    if (staffToken && isAuthPage(req)) {
+        return NextResponse.redirect(new URL("/", req.url));
+    }
+
     if (isPublicRoute(req)) {
         return NextResponse.next();
     }
 
-    // Check for staff session cookie first
-    const staffToken = req.cookies.get("staff-session")?.value;
+    // Staff has a session cookie — let them through to protected pages
     if (staffToken) {
-        // Staff has a session cookie — let them through
         return NextResponse.next();
     }
 

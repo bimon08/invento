@@ -2,7 +2,7 @@ export const dynamic = "force-dynamic";
 
 import { getAppSession } from "@/lib/auth";
 import { db } from "@/db";
-import { products } from "@/db/schema";
+import { products, joinCodes } from "@/db/schema";
 import { eq, like, and } from "drizzle-orm";
 import { Header } from "@/components/Header";
 import { SearchBar } from "@/components/SearchBar";
@@ -70,12 +70,24 @@ export default async function DashboardPage({ searchParams }: PageProps) {
       .orderBy(products.name);
   }
 
+  // Get the store name for staff users
+  let storeName: string | undefined;
+  if (session?.staffUsername && orgId) {
+    const [jc] = await db
+      .select({ orgName: joinCodes.orgName })
+      .from(joinCodes)
+      .where(eq(joinCodes.orgId, orgId))
+      .limit(1);
+    storeName = jc?.orgName;
+  }
+
   return (
     <NuqsAdapter>
       <div className="flex min-h-screen flex-col bg-slate-950">
         <Header
           totalValue={productList.reduce((acc, p) => acc + p.price * p.stock, 0)}
           staffUsername={session?.staffUsername}
+          storeName={storeName}
         />
         <SearchBar />
         <PWAInstallBanner />
