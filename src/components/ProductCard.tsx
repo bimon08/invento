@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useRef, useEffect } from "react";
 import type { Product } from "@/db/schema";
 import { StockAdjuster } from "./StockAdjuster";
 import { formatPrice, cn } from "@/lib/utils";
@@ -12,6 +13,17 @@ interface ProductCardProps {
 
 export function ProductCard({ product, onEdit }: ProductCardProps) {
     const isLowStock = product.stock <= product.minStock;
+    const [nameExpanded, setNameExpanded] = useState(false);
+    const [isOverflowing, setIsOverflowing] = useState(false);
+    const nameRef = useRef<HTMLHeadingElement>(null);
+
+    useEffect(() => {
+        const el = nameRef.current;
+        if (el) {
+            // Check if text is actually clamped/overflowing
+            setIsOverflowing(el.scrollHeight > el.clientHeight + 1);
+        }
+    }, [product.name]);
 
     return (
         <div
@@ -28,9 +40,28 @@ export function ProductCard({ product, onEdit }: ProductCardProps) {
 
             {/* Top Row: Name + Edit hint */}
             <div className="flex items-start justify-between gap-2 mb-1">
-                <h3 className="text-sm font-semibold text-white leading-tight line-clamp-2 flex-1">
-                    {product.name}
-                </h3>
+                <div className="flex-1 min-w-0">
+                    <h3
+                        ref={nameRef}
+                        className={cn(
+                            "text-sm font-semibold text-white leading-tight",
+                            !nameExpanded && "line-clamp-2"
+                        )}
+                    >
+                        {product.name}
+                    </h3>
+                    {(isOverflowing || nameExpanded) && (
+                        <button
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                setNameExpanded(!nameExpanded);
+                            }}
+                            className="mt-0.5 text-[11px] font-medium text-indigo-400 hover:text-indigo-300 transition-colors"
+                        >
+                            {nameExpanded ? "show less" : "...more"}
+                        </button>
+                    )}
+                </div>
                 <div className="flex items-center gap-1 shrink-0 mt-0.5">
                     {isLowStock && (
                         <span className="flex items-center gap-1 rounded-md bg-red-500/15 px-1.5 py-0.5 text-[10px] font-medium text-red-400">
@@ -41,9 +72,6 @@ export function ProductCard({ product, onEdit }: ProductCardProps) {
                     <ChevronRight className="h-3.5 w-3.5 text-slate-600 opacity-0 group-hover:opacity-100 transition-opacity" />
                 </div>
             </div>
-
-
-
 
             {/* Price */}
             <div className="mb-3">
