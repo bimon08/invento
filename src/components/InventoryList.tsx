@@ -27,13 +27,21 @@ interface CategoryGroup {
     lowStockCount: number;
 }
 
+// Persist expanded category across re-renders caused by revalidatePath
+let persistedExpandedCategory: string | null = null;
+
 export function InventoryList({ products }: InventoryListProps) {
     const [addDrawerOpen, setAddDrawerOpen] = useState(false);
     const [editingProduct, setEditingProduct] = useState<Product | null>(null);
     const [editDrawerOpen, setEditDrawerOpen] = useState(false);
-    const [expandedCategory, setExpandedCategory] = useState<string | null>(
-        null
+    const [expandedCategory, _setExpandedCategory] = useState<string | null>(
+        persistedExpandedCategory
     );
+
+    const setExpandedCategory = (cat: string | null) => {
+        persistedExpandedCategory = cat;
+        _setExpandedCategory(cat);
+    };
 
     const handleEdit = (product: Product) => {
         setEditingProduct(product);
@@ -213,17 +221,16 @@ export function InventoryList({ products }: InventoryListProps) {
 
                                     {/* Expanded Products — grouped by brand */}
                                     {isExpanded && (() => {
-                                        // Group products by brand (split comma-separated brands)
+                                        // Group products by their full brand string (no duplication)
                                         const brandGroups: Record<string, Product[]> = {};
                                         cat.products.forEach((p) => {
                                             const brandStr = p.brand?.trim();
-                                            const brands = brandStr
-                                                ? brandStr.split(",").map((b) => b.trim()).filter(Boolean)
-                                                : ["Other"];
-                                            brands.forEach((brand) => {
-                                                if (!brandGroups[brand]) brandGroups[brand] = [];
-                                                brandGroups[brand].push(p);
-                                            });
+                                            // Create a sorted, normalized label from all brands
+                                            const brandLabel = brandStr
+                                                ? brandStr.split(",").map((b) => b.trim()).filter(Boolean).sort((a, b) => a.localeCompare(b)).join(" · ")
+                                                : "Other";
+                                            if (!brandGroups[brandLabel]) brandGroups[brandLabel] = [];
+                                            brandGroups[brandLabel].push(p);
                                         });
 
                                         const sortedBrands = Object.entries(brandGroups).sort(

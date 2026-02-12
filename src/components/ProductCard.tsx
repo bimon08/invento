@@ -13,11 +13,6 @@ interface ProductCardProps {
 export function ProductCard({ product, onEdit }: ProductCardProps) {
     const isLowStock = product.stock <= product.minStock;
 
-    // Parse multi-brand display
-    const brandList = product.brand
-        ? product.brand.split(",").map((b) => b.trim()).filter(Boolean)
-        : [];
-
     return (
         <div
             onClick={() => onEdit(product)}
@@ -47,19 +42,8 @@ export function ProductCard({ product, onEdit }: ProductCardProps) {
                 </div>
             </div>
 
-            {/* Brand chips */}
-            {brandList.length > 0 && (
-                <div className="mb-2.5 flex flex-wrap gap-1">
-                    {brandList.map((b) => (
-                        <span
-                            key={b}
-                            className="inline-block rounded-md bg-slate-700/40 px-1.5 py-0.5 text-[10px] font-medium text-slate-400"
-                        >
-                            {b}
-                        </span>
-                    ))}
-                </div>
-            )}
+
+
 
             {/* Price */}
             <div className="mb-3">
