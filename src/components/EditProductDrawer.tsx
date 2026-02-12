@@ -6,6 +6,7 @@ import { updateProduct, deleteProduct } from "@/actions/inventory";
 import { toast } from "sonner";
 import { Loader2, Save, Trash2 } from "lucide-react";
 import { CategorySelect } from "./CategorySelect";
+import { BrandSelect } from "./BrandSelect";
 import type { Product } from "@/db/schema";
 
 interface EditProductDrawerProps {
@@ -23,6 +24,8 @@ export function EditProductDrawer({
     const [isDeleting, setIsDeleting] = useState(false);
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [name, setName] = useState("");
+    const [brand, setBrand] = useState("");
+    const [model, setModel] = useState("");
     const [category, setCategory] = useState("");
     const [price, setPrice] = useState("");
     const [stock, setStock] = useState("");
@@ -32,6 +35,8 @@ export function EditProductDrawer({
     useEffect(() => {
         if (open && product) {
             setName(product.name);
+            setBrand(product.brand || "");
+            setModel(product.model || "");
             setCategory(product.category || "");
             setPrice(product.price.toString());
             setStock(product.stock.toString());
@@ -48,6 +53,8 @@ export function EditProductDrawer({
             const [, error] = await updateProduct({
                 id: product.id,
                 name,
+                brand,
+                model,
                 category,
                 price: parseFloat(price) || 0,
                 stock: parseInt(stock) || 0,
@@ -147,6 +154,17 @@ export function EditProductDrawer({
                                 />
                             </div>
 
+                            {/* Brand */}
+                            <div>
+                                <label className="mb-1.5 block text-sm font-medium text-slate-400">
+                                    Brand
+                                </label>
+                                <BrandSelect
+                                    value={brand}
+                                    onChange={setBrand}
+                                />
+                            </div>
+
                             {/* Category */}
                             <div>
                                 <label className="mb-1.5 block text-sm font-medium text-slate-400">
@@ -155,6 +173,21 @@ export function EditProductDrawer({
                                 <CategorySelect
                                     value={category}
                                     onChange={setCategory}
+                                />
+                            </div>
+
+                            {/* Model */}
+                            <div>
+                                <label className="mb-1.5 block text-sm font-medium text-slate-400">
+                                    Model
+                                </label>
+                                <input
+                                    type="text"
+                                    value={model}
+                                    onChange={(e) => setModel(e.target.value)}
+                                    placeholder="e.g. iPhone 15 Pro Max"
+                                    autoComplete="off"
+                                    className="h-12 w-full rounded-xl border border-slate-700 bg-slate-800 px-4 text-sm text-white placeholder:text-slate-500 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all"
                                 />
                             </div>
 

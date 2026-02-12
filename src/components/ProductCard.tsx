@@ -3,7 +3,7 @@
 import type { Product } from "@/db/schema";
 import { StockAdjuster } from "./StockAdjuster";
 import { formatPrice, cn } from "@/lib/utils";
-import { Tag, AlertTriangle } from "lucide-react";
+import { AlertTriangle } from "lucide-react";
 
 interface ProductCardProps {
     product: Product;
@@ -36,13 +36,7 @@ export function ProductCard({ product, onEdit }: ProductCardProps) {
                 {product.name}
             </h3>
 
-            {/* Category Badge */}
-            {product.category && (
-                <div className="mb-3 inline-flex items-center gap-1 rounded-md bg-slate-700/50 px-2 py-0.5 text-xs text-slate-400">
-                    <Tag className="h-3 w-3" />
-                    {product.category}
-                </div>
-            )}
+
 
             {/* Price */}
             <div className="mb-4">

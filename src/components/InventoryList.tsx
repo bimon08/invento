@@ -211,24 +211,55 @@ export function InventoryList({ products }: InventoryListProps) {
                                         </div>
                                     </button>
 
-                                    {/* Expanded Products */}
-                                    {isExpanded && (
-                                        <div className="mt-2 ml-3 border-l-2 border-indigo-500/20 pl-4 pb-2">
-                                            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                                                {cat.products.map(
-                                                    (product) => (
-                                                        <ProductCard
-                                                            key={product.id}
-                                                            product={product}
-                                                            onEdit={
-                                                                handleEdit
-                                                            }
-                                                        />
-                                                    )
-                                                )}
+                                    {/* Expanded Products — grouped by brand */}
+                                    {isExpanded && (() => {
+                                        // Group products by brand
+                                        const brandGroups: Record<string, Product[]> = {};
+                                        cat.products.forEach((p) => {
+                                            const brand = p.brand?.trim() || "Other";
+                                            if (!brandGroups[brand]) brandGroups[brand] = [];
+                                            brandGroups[brand].push(p);
+                                        });
+
+                                        const sortedBrands = Object.entries(brandGroups).sort(
+                                            ([a], [b]) => {
+                                                if (a === "Other") return 1;
+                                                if (b === "Other") return -1;
+                                                return a.localeCompare(b);
+                                            }
+                                        );
+
+                                        return (
+                                            <div className="mt-2 ml-3 border-l-2 border-indigo-500/20 pl-4 pb-2">
+                                                <div className="flex flex-col gap-4">
+                                                    {sortedBrands.map(([brandName, brandProducts]) => (
+                                                        <div key={brandName}>
+                                                            {/* Brand Label */}
+                                                            <div className="mb-2 flex items-center gap-2">
+                                                                <span className="text-xs font-semibold uppercase tracking-wider text-indigo-400/80">
+                                                                    {brandName}
+                                                                </span>
+                                                                <span className="text-[10px] text-slate-500">
+                                                                    ({brandProducts.length})
+                                                                </span>
+                                                                <div className="flex-1 h-px bg-slate-700/50" />
+                                                            </div>
+                                                            {/* Brand's Products */}
+                                                            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                                                                {brandProducts.map((product) => (
+                                                                    <ProductCard
+                                                                        key={product.id}
+                                                                        product={product}
+                                                                        onEdit={handleEdit}
+                                                                    />
+                                                                ))}
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                </div>
                                             </div>
-                                        </div>
-                                    )}
+                                        );
+                                    })()}
                                 </div>
                             );
                         })}
