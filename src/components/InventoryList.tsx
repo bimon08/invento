@@ -213,12 +213,17 @@ export function InventoryList({ products }: InventoryListProps) {
 
                                     {/* Expanded Products — grouped by brand */}
                                     {isExpanded && (() => {
-                                        // Group products by brand
+                                        // Group products by brand (split comma-separated brands)
                                         const brandGroups: Record<string, Product[]> = {};
                                         cat.products.forEach((p) => {
-                                            const brand = p.brand?.trim() || "Other";
-                                            if (!brandGroups[brand]) brandGroups[brand] = [];
-                                            brandGroups[brand].push(p);
+                                            const brandStr = p.brand?.trim();
+                                            const brands = brandStr
+                                                ? brandStr.split(",").map((b) => b.trim()).filter(Boolean)
+                                                : ["Other"];
+                                            brands.forEach((brand) => {
+                                                if (!brandGroups[brand]) brandGroups[brand] = [];
+                                                brandGroups[brand].push(p);
+                                            });
                                         });
 
                                         const sortedBrands = Object.entries(brandGroups).sort(

@@ -30,7 +30,7 @@ const DEFAULT_BRANDS = [
 ];
 
 interface BrandSelectProps {
-    value: string;
+    value: string; // comma-separated brands e.g. "Realme, Samsung"
     onChange: (value: string) => void;
     existingBrands?: string[];
 }
@@ -45,6 +45,11 @@ export function BrandSelect({
     const [savedBrands, setSavedBrands] = useState<string[]>([]);
     const [isCreating, setIsCreating] = useState(false);
     const inputRef = useRef<HTMLInputElement>(null);
+
+    // Parse value into array
+    const selectedBrands = value
+        ? value.split(",").map((b) => b.trim()).filter(Boolean)
+        : [];
 
     // Load saved brands from DB on first open
     useEffect(() => {
@@ -77,10 +82,23 @@ export function BrandSelect({
         }
     }, [isOpen]);
 
-    const handleSelect = (brand: string) => {
-        onChange(brand);
-        setIsOpen(false);
+    const toggleBrand = (brand: string) => {
+        if (selectedBrands.includes(brand)) {
+            // Remove brand
+            const updated = selectedBrands.filter((b) => b !== brand);
+            onChange(updated.join(", "));
+        } else {
+            // Add brand
+            const updated = [...selectedBrands, brand];
+            onChange(updated.join(", "));
+        }
         setSearch("");
+    };
+
+    const removeBrand = (brand: string, e?: React.MouseEvent) => {
+        e?.stopPropagation();
+        const updated = selectedBrands.filter((b) => b !== brand);
+        onChange(updated.join(", "));
     };
 
     const handleCreate = async () => {
@@ -91,13 +109,9 @@ export function BrandSelect({
         try {
             await createBrand({ name });
             setSavedBrands((prev) => Array.from(new Set([...prev, name])).sort());
-            onChange(name);
-            setIsOpen(false);
-            setSearch("");
+            toggleBrand(name);
         } catch {
-            onChange(name);
-            setIsOpen(false);
-            setSearch("");
+            toggleBrand(name);
         } finally {
             setIsCreating(false);
         }
@@ -118,20 +132,37 @@ export function BrandSelect({
                     setSearch("");
                 }}
                 className={cn(
-                    "flex h-11 w-full items-center justify-between rounded-xl border bg-slate-800 px-3 text-sm text-left transition-all",
+                    "flex min-h-[2.75rem] w-full items-center justify-between rounded-xl border bg-slate-800 px-3 py-1.5 text-sm text-left transition-all",
                     isOpen
                         ? "border-indigo-500 ring-2 ring-indigo-500/20"
                         : "border-slate-700 hover:border-slate-600"
                 )}
             >
-                <span className={cn("truncate", value ? "text-white" : "text-slate-500")}>
-                    {value || "Select brand..."}
-                </span>
-                <div className="flex items-center gap-1 shrink-0">
-                    {value && (
+                <div className="flex flex-1 flex-wrap items-center gap-1.5 min-w-0">
+                    {selectedBrands.length > 0 ? (
+                        selectedBrands.map((brand) => (
+                            <span
+                                key={brand}
+                                className="inline-flex items-center gap-1 rounded-md bg-indigo-500/15 border border-indigo-500/20 px-2 py-0.5 text-xs font-medium text-indigo-300"
+                            >
+                                {brand}
+                                <span
+                                    onClick={(e) => removeBrand(brand, e)}
+                                    className="rounded-sm p-0.5 hover:bg-indigo-500/30 transition-colors cursor-pointer"
+                                >
+                                    <X className="h-2.5 w-2.5" />
+                                </span>
+                            </span>
+                        ))
+                    ) : (
+                        <span className="text-slate-500">Select brands...</span>
+                    )}
+                </div>
+                <div className="flex items-center gap-1 shrink-0 ml-1">
+                    {selectedBrands.length > 0 && (
                         <span
                             onClick={handleClear}
-                            className="rounded p-0.5 text-slate-500 hover:text-white"
+                            className="rounded p-0.5 text-slate-500 hover:text-white cursor-pointer"
                         >
                             <X className="h-3 w-3" />
                         </span>
@@ -161,7 +192,7 @@ export function BrandSelect({
                                     if (showCreateOption) {
                                         handleCreate();
                                     } else if (filtered.length > 0) {
-                                        handleSelect(filtered[0]);
+                                        toggleBrand(filtered[0]);
                                     }
                                 }
                             }}
@@ -188,22 +219,40 @@ export function BrandSelect({
                             </button>
                         )}
 
-                        {filtered.map((brand) => (
-                            <button
-                                type="button"
-                                key={brand}
-                                onClick={() => handleSelect(brand)}
-                                className={cn(
-                                    "flex w-full items-center gap-2.5 px-3.5 py-2.5 text-sm transition-colors hover:bg-slate-800",
-                                    brand === value
-                                        ? "text-indigo-400 bg-indigo-500/5"
-                                        : "text-slate-300"
-                                )}
-                            >
-                                <Smartphone className="h-3.5 w-3.5 text-slate-500" />
-                                {brand}
-                            </button>
-                        ))}
+                        {filtered.map((brand) => {
+                            const isSelected = selectedBrands.includes(brand);
+                            return (
+                                <button
+                                    type="button"
+                                    key={brand}
+                                    onClick={() => toggleBrand(brand)}
+                                    className={cn(
+                                        "flex w-full items-center gap-2.5 px-3.5 py-2.5 text-sm transition-colors hover:bg-slate-800",
+                                        isSelected
+                                            ? "text-indigo-400 bg-indigo-500/5"
+                                            : "text-slate-300"
+                                    )}
+                                >
+                                    {/* Checkbox indicator */}
+                                    <div
+                                        className={cn(
+                                            "flex h-4 w-4 shrink-0 items-center justify-center rounded border transition-all",
+                                            isSelected
+                                                ? "border-indigo-500 bg-indigo-500"
+                                                : "border-slate-600 bg-slate-800"
+                                        )}
+                                    >
+                                        {isSelected && (
+                                            <svg className="h-2.5 w-2.5 text-white" viewBox="0 0 12 12" fill="none">
+                                                <path d="M2 6l3 3 5-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                                            </svg>
+                                        )}
+                                    </div>
+                                    <Smartphone className="h-3.5 w-3.5 text-slate-500" />
+                                    {brand}
+                                </button>
+                            );
+                        })}
 
                         {filtered.length === 0 && !showCreateOption && (
                             <p className="px-3.5 py-3 text-sm text-slate-500 text-center">

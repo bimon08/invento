@@ -3,7 +3,7 @@
 import type { Product } from "@/db/schema";
 import { StockAdjuster } from "./StockAdjuster";
 import { formatPrice, cn } from "@/lib/utils";
-import { AlertTriangle } from "lucide-react";
+import { AlertTriangle, ChevronRight } from "lucide-react";
 
 interface ProductCardProps {
     product: Product;
@@ -13,44 +13,70 @@ interface ProductCardProps {
 export function ProductCard({ product, onEdit }: ProductCardProps) {
     const isLowStock = product.stock <= product.minStock;
 
+    // Parse multi-brand display
+    const brandList = product.brand
+        ? product.brand.split(",").map((b) => b.trim()).filter(Boolean)
+        : [];
+
     return (
         <div
             onClick={() => onEdit(product)}
             className={cn(
-                "group relative cursor-pointer overflow-hidden rounded-2xl border bg-gradient-to-b from-slate-800/80 to-slate-900/80 p-4 transition-all hover:shadow-lg hover:shadow-black/20 active:scale-[0.98]",
+                "group relative cursor-pointer overflow-hidden rounded-2xl border bg-gradient-to-b from-slate-800/60 to-slate-900/80 p-4 transition-all duration-200 hover:shadow-xl hover:shadow-black/30 active:scale-[0.98]",
                 isLowStock
-                    ? "border-red-500/40 shadow-red-500/5"
-                    : "border-slate-700/50 hover:border-slate-600/50"
+                    ? "border-red-500/30 shadow-md shadow-red-500/5"
+                    : "border-slate-700/40 hover:border-indigo-500/30"
             )}
         >
-            {/* Low Stock Warning */}
-            {isLowStock && (
-                <div className="absolute right-3 top-3 flex items-center gap-1.5 rounded-lg bg-red-500/15 px-2 py-1 text-xs font-medium text-red-400">
-                    <AlertTriangle className="h-3 w-3" />
-                    Low
+            {/* Subtle glow on hover */}
+            <div className="pointer-events-none absolute inset-0 rounded-2xl bg-gradient-to-br from-indigo-500/[0.03] to-purple-500/[0.03] opacity-0 transition-opacity group-hover:opacity-100" />
+
+            {/* Top Row: Name + Edit hint */}
+            <div className="flex items-start justify-between gap-2 mb-1">
+                <h3 className="text-sm font-semibold text-white leading-tight line-clamp-2 flex-1">
+                    {product.name}
+                </h3>
+                <div className="flex items-center gap-1 shrink-0 mt-0.5">
+                    {isLowStock && (
+                        <span className="flex items-center gap-1 rounded-md bg-red-500/15 px-1.5 py-0.5 text-[10px] font-medium text-red-400">
+                            <AlertTriangle className="h-2.5 w-2.5" />
+                            Low
+                        </span>
+                    )}
+                    <ChevronRight className="h-3.5 w-3.5 text-slate-600 opacity-0 group-hover:opacity-100 transition-opacity" />
+                </div>
+            </div>
+
+            {/* Brand chips */}
+            {brandList.length > 0 && (
+                <div className="mb-2.5 flex flex-wrap gap-1">
+                    {brandList.map((b) => (
+                        <span
+                            key={b}
+                            className="inline-block rounded-md bg-slate-700/40 px-1.5 py-0.5 text-[10px] font-medium text-slate-400"
+                        >
+                            {b}
+                        </span>
+                    ))}
                 </div>
             )}
 
-            {/* Product Name */}
-            <h3 className="mb-1 text-base font-semibold text-white pr-16 leading-tight line-clamp-2">
-                {product.name}
-            </h3>
-
-
-
             {/* Price */}
-            <div className="mb-4">
-                <p className="text-2xl font-bold text-white tabular-nums">
+            <div className="mb-3">
+                <p className="text-xl font-bold text-white tabular-nums tracking-tight">
                     {formatPrice(product.price)}
                 </p>
             </div>
+
+            {/* Divider */}
+            <div className="h-px bg-slate-700/40 mb-3" />
 
             {/* Stock Adjuster */}
             <div
                 onClick={(e) => e.stopPropagation()}
                 className="flex items-center justify-between"
             >
-                <span className="text-xs font-medium text-slate-500 uppercase tracking-wider">
+                <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest">
                     Stock
                 </span>
                 <StockAdjuster
