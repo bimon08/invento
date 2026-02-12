@@ -145,7 +145,7 @@ export default function JoinPage({ params }: { params: Promise<{ code: string }>
                             </div>
                             <div>
                                 <h2 className="text-lg font-bold text-white">
-                                    Join {codeInfo.orgName}
+                                    {codeInfo.orgName}
                                 </h2>
                                 <p className="mt-1 text-sm text-slate-400">
                                     You&apos;ve been invited to join this store as a{" "}
