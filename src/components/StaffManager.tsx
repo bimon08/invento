@@ -14,6 +14,7 @@ import {
     Check,
     RefreshCw,
     UserPlus,
+    UserCheck,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -22,6 +23,12 @@ interface JoinCodeData {
     code: string;
     role: string;
     orgName: string;
+}
+
+interface StaffMemberData {
+    id: string;
+    username: string;
+    createdAt: string;
 }
 
 export function StaffManager() {
@@ -41,6 +48,9 @@ export function StaffManager() {
     const [isGenerating, setIsGenerating] = useState(false);
     const [copied, setCopied] = useState(false);
     const [loadingCode, setLoadingCode] = useState(true);
+    const [staffMembers, setStaffMembers] = useState<StaffMemberData[]>([]);
+    const [loadingStaff, setLoadingStaff] = useState(true);
+    const [deletingStaffId, setDeletingStaffId] = useState<string | null>(null);
 
     // Fetch existing join code
     useEffect(() => {
@@ -58,6 +68,24 @@ export function StaffManager() {
             }
         }
         if (isLoaded && organization) fetchCode();
+    }, [isLoaded, organization]);
+
+    // Fetch staff members who joined via code
+    useEffect(() => {
+        async function fetchStaff() {
+            try {
+                const res = await fetch("/api/staff/members");
+                const data = await res.json();
+                if (data.members) {
+                    setStaffMembers(data.members);
+                }
+            } catch {
+                // Ignore
+            } finally {
+                setLoadingStaff(false);
+            }
+        }
+        if (isLoaded && organization) fetchStaff();
     }, [isLoaded, organization]);
 
     if (!isLoaded || !organization) return null;
@@ -121,6 +149,43 @@ export function StaffManager() {
         } finally {
             setRevokingId(null);
         }
+    };
+
+    const handleDeleteStaffMember = async (staffId: string, username: string) => {
+        if (!confirm(`Remove staff member "${username}"? They will no longer be able to log in.`)) return;
+
+        setDeletingStaffId(staffId);
+        try {
+            const res = await fetch(`/api/staff/members?id=${staffId}`, {
+                method: "DELETE",
+            });
+            if (res.ok) {
+                setStaffMembers((prev) => prev.filter((m) => m.id !== staffId));
+                toast.success(`${username} removed`);
+            } else {
+                const data = await res.json();
+                toast.error(data.error || "Failed to remove staff member");
+            }
+        } catch {
+            toast.error("Failed to remove staff member");
+        } finally {
+            setDeletingStaffId(null);
+        }
+    };
+
+    const formatDate = (dateStr: string) => {
+        const date = new Date(dateStr);
+        const now = new Date();
+        const diffMs = now.getTime() - date.getTime();
+        const diffMins = Math.floor(diffMs / 60000);
+        const diffHours = Math.floor(diffMs / 3600000);
+        const diffDays = Math.floor(diffMs / 86400000);
+
+        if (diffMins < 1) return "Just now";
+        if (diffMins < 60) return `${diffMins}m ago`;
+        if (diffHours < 24) return `${diffHours}h ago`;
+        if (diffDays < 7) return `${diffDays}d ago`;
+        return date.toLocaleDateString("en-IN", { day: "numeric", month: "short" });
     };
 
     return (
@@ -192,11 +257,71 @@ export function StaffManager() {
                 )}
             </div>
 
-            {/* Current Members */}
+            {/* Staff Members (joined via code) */}
+            <div className="mb-6 rounded-2xl border border-slate-700/50 bg-slate-900/80 shadow-lg shadow-black/10">
+                <div className="border-b border-slate-800 px-4 py-3 flex items-center justify-between">
+                    <h3 className="flex items-center gap-2 text-sm font-semibold text-white">
+                        <UserCheck className="h-4 w-4 text-emerald-400" />
+                        Staff Members
+                    </h3>
+                    <span className="rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-semibold text-emerald-400 border border-emerald-500/20">
+                        {loadingStaff ? "..." : staffMembers.length}
+                    </span>
+                </div>
+                <div className="divide-y divide-slate-800/50">
+                    {loadingStaff ? (
+                        <div className="flex items-center justify-center py-8">
+                            <Loader2 className="h-4 w-4 animate-spin text-slate-500" />
+                        </div>
+                    ) : staffMembers.length === 0 ? (
+                        <div className="flex flex-col items-center gap-2 py-8 text-center">
+                            <UserPlus className="h-6 w-6 text-slate-600" />
+                            <div>
+                                <p className="text-sm text-slate-400">No staff members yet</p>
+                                <p className="text-xs text-slate-500">
+                                    Share the staff code above to invite people
+                                </p>
+                            </div>
+                        </div>
+                    ) : (
+                        staffMembers.map((member) => (
+                            <div key={member.id} className="flex items-center gap-3 px-4 py-3">
+                                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-emerald-500/20 to-teal-500/20 ring-1 ring-emerald-500/20 text-xs font-bold text-emerald-300">
+                                    {(member.username[0] || "?").toUpperCase()}
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                    <p className="truncate text-sm font-medium text-white">
+                                        {member.username}
+                                    </p>
+                                    <p className="text-[11px] text-slate-500">
+                                        Joined {formatDate(member.createdAt)}
+                                    </p>
+                                </div>
+                                <span className="rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-emerald-400 border border-emerald-500/20">
+                                    Staff
+                                </span>
+                                <button
+                                    onClick={() => handleDeleteStaffMember(member.id, member.username)}
+                                    disabled={deletingStaffId === member.id}
+                                    className="rounded-lg p-2 text-slate-500 transition-colors hover:bg-red-500/10 hover:text-red-400 disabled:opacity-50"
+                                >
+                                    {deletingStaffId === member.id ? (
+                                        <Loader2 className="h-4 w-4 animate-spin" />
+                                    ) : (
+                                        <Trash2 className="h-4 w-4" />
+                                    )}
+                                </button>
+                            </div>
+                        ))
+                    )}
+                </div>
+            </div>
+
+            {/* Organization Members (Clerk) */}
             <div className="mb-6 rounded-2xl border border-slate-700/50 bg-slate-900/80 shadow-lg shadow-black/10">
                 <div className="border-b border-slate-800 px-4 py-3">
                     <h3 className="text-sm font-semibold text-white">
-                        Members ({memberships?.data?.length || 0})
+                        Organization Members ({memberships?.data?.length || 0})
                     </h3>
                 </div>
                 <div className="divide-y divide-slate-800/50">
@@ -221,8 +346,8 @@ export function StaffManager() {
                             </div>
                             <span
                                 className={`rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider ${mem.role === "org:admin"
-                                        ? "bg-amber-500/10 text-amber-400 border border-amber-500/20"
-                                        : "bg-slate-700/50 text-slate-400 border border-slate-600/30"
+                                    ? "bg-amber-500/10 text-amber-400 border border-amber-500/20"
+                                    : "bg-slate-700/50 text-slate-400 border border-slate-600/30"
                                     }`}
                             >
                                 {mem.role === "org:admin" ? "Admin" : "Member"}
